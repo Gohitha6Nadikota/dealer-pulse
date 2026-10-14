@@ -92,7 +92,7 @@ export function actionReasons(lead: Lead, asOf: string): ActionItem["reasons"] {
     out.push({
       reason: "status_conflict",
       severity: "review",
-      detail: "Stored as lost, but history shows it in progress with no loss reason",
+      detail: "Stored as lost, but history has no loss event or loss reason",
     });
   }
   return out;

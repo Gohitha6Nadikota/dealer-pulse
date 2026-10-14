@@ -11,11 +11,14 @@ export function KpiStrip({
   summary,
   asOf,
   revenueDetail,
+  pipelineConflicts = 0,
 }: {
   summary: ScopeSummary;
   asOf: string;
   /** Replaces the target line under revenue, e.g. for a rep with no target. */
   revenueDetail?: string;
+  /** Open leads that are CRM status conflicts (stored as lost), shown as a qualification. */
+  pipelineConflicts?: number;
 }) {
   const { kpis: k, deltas, previousRange, range } = summary;
   const deltaContext = previousRange ? `vs ${formatRangeCompact(previousRange)}` : undefined;
@@ -70,7 +73,11 @@ export function KpiStrip({
             label="Open pipeline"
             value={formatINR(k.openPipelineValue)}
             help={METRIC_HELP.openPipeline}
-            detail={`${formatNumber(k.openPipelineCount)} leads in progress`}
+            detail={
+              pipelineConflicts > 0
+                ? `${formatNumber(k.openPipelineCount)} leads in progress, incl. ${formatNumber(pipelineConflicts)} stored as lost`
+                : `${formatNumber(k.openPipelineCount)} leads in progress`
+            }
           />
           <KpiCard
             label="Awaiting delivery"

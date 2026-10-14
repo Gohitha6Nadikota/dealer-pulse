@@ -14,6 +14,7 @@ import {
   type FunnelComparisonStage,
   type ScopeSummary,
 } from "@/lib/analytics/scope";
+import { statusConflictSummary, type StatusConflictSummary } from "@/lib/analytics/status-conflicts";
 import type { Filters } from "@/lib/filters";
 import { sortLeads, type LeadRow } from "@/lib/lead-table";
 import type { Branch, Dataset, SalesRep } from "@/lib/types";
@@ -33,6 +34,8 @@ export type BranchView = ScopeSummary & {
   /** Open and awaiting-delivery leads, most idle first. Snapshot as of AS_OF. */
   openLeads: LeadRow[];
   insight: Insight;
+  /** Data-quality finding for the branch; never date-filtered. */
+  statusConflicts: StatusConflictSummary;
 };
 
 /** null when the id isn't a branch. */
@@ -52,6 +55,7 @@ export function buildBranchView(ds: Dataset, branchId: string, filters: Filters)
     filters,
     branch,
     manager: branchManager(ds, branch.id),
+    statusConflicts: statusConflictSummary(leads, [branch]),
     health: branchHealth({ current: summary.kpis, previous: summary.previousKpis, company }),
     company,
     funnelVsCompany: compareFunnels(summary.funnel, companyFunnel),

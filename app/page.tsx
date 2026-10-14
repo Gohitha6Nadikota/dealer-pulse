@@ -11,11 +11,13 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { RepTable } from "@/components/dashboard/rep-table";
 import { SectionCard } from "@/components/dashboard/section-card";
+import { StatusConflictNotice } from "@/components/dashboard/status-conflict-notice";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { Button } from "@/components/ui/button";
 import { buildOverview, type Overview } from "@/lib/analytics/overview";
+import { statusConflictNotice } from "@/lib/analytics/status-conflicts";
 import { actionsHref } from "@/lib/action-params";
 import { getDataset } from "@/lib/data";
 import { hrefWithFilters, parseFilters } from "@/lib/filters";
@@ -71,6 +73,11 @@ async function OverviewContent({ searchParams }: Pick<PageProps<"/">, "searchPar
           branches={ds.branches.map((b) => ({ id: b.id, name: b.name }))}
         />
       </PageHeader>
+      {/* A dataset finding, not a period metric: shown whatever the date range. */}
+      <StatusConflictNotice
+        notice={statusConflictNotice(overview.statusConflicts, overview.branch?.name ?? null)}
+        href={actionsHref(filters, { reason: "status_conflict" })}
+      />
       <PendingRegion className="flex flex-col gap-6">
         {overview.isEmpty ? (
           <EmptyState
@@ -95,7 +102,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
   return (
     <>
       <InsightBanner insight={overview.insight} />
-      <KpiStrip summary={overview} asOf={asOf} />
+      <KpiStrip summary={overview} asOf={asOf} pipelineConflicts={overview.statusConflicts.count} />
 
       <div className="grid gap-4 xl:grid-cols-5">
         <SectionCard
@@ -113,7 +120,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
           className="xl:col-span-2"
         >
           {overview.funnel.total ? (
-            <FunnelChart funnel={overview.funnel} drop={overview.funnelDrop} />
+            <FunnelChart funnel={overview.funnel} drop={overview.funnelDrop} conflicts={overview.funnelConflicts} />
           ) : (
             <EmptyState title="No new leads in this period" className="py-8" />
           )}
@@ -141,7 +148,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
           help={METRIC_HELP.health}
           contentClassName="px-0"
         >
-          <BranchTable rows={overview.branches} filters={filters} />
+          <BranchTable rows={overview.branches} filters={filters} conflicts={overview.statusConflicts.byBranch} />
         </SectionCard>
       )}
     </>

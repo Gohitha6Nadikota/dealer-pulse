@@ -29,6 +29,8 @@ export type LeadRow = {
   lostReason: string | null;
   delivery: { daysToDeliver: number; delayReason: string | null } | null;
   dataQualityIssue: DataQualityIssue | null;
+  /** Stored as lost with no loss event (see lib/analytics/status-conflicts.ts). */
+  statusConflict: boolean;
   history: StatusEvent[];
 };
 

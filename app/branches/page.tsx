@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/dashboard/section-card";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { branchRows } from "@/lib/analytics/scope";
+import { statusConflictSummary } from "@/lib/analytics/status-conflicts";
 import { getDataset } from "@/lib/data";
 import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
 import { formatNumber, formatRange } from "@/lib/format";
@@ -31,6 +32,7 @@ async function BranchesContent({ searchParams }: Pick<PageProps<"/branches">, "s
     branchIds: ds.branches.map((b) => b.id),
   });
   const rows = branchRows(ds, filters.range);
+  const conflicts = statusConflictSummary(ds.leads, ds.branches);
 
   return (
     <FilterTransition>
@@ -48,7 +50,7 @@ async function BranchesContent({ searchParams }: Pick<PageProps<"/branches">, "s
           help={METRIC_HELP.health}
           contentClassName="px-0"
         >
-          <BranchTable rows={rows} filters={filters} />
+          <BranchTable rows={rows} filters={filters} conflicts={conflicts.byBranch} />
         </SectionCard>
       </PendingRegion>
     </FilterTransition>

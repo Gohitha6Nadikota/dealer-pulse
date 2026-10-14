@@ -32,10 +32,12 @@ export function LeadTimelineSheet({
               </SheetDescription>
             </SheetHeader>
             <div className="flex flex-col gap-5 p-4">
-              {lead.dataQualityIssue === "status_lost_without_event" && (
+              {lead.statusConflict && (
                 <p className="flex gap-2 rounded-md bg-warning-surface p-3 text-xs text-warning-foreground">
                   <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                  Recorded as lost, but its history has no loss event or reason. Treated as open at its last stage.
+                  Stored as lost, but its history has no loss event and no loss reason, so it is treated as open at its last
+                  stage and excluded from genuine losses. The history and notes suggest an ongoing conversation; verify
+                  with the sales officer and correct the CRM status.
                 </p>
               )}
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">

@@ -12,10 +12,13 @@ export function FunnelChart({
   funnel,
   drop,
   comparison,
+  conflicts = 0,
 }: {
   funnel: Funnel;
   drop: ReturnType<typeof biggestDrop>;
   comparison?: { stages: FunnelComparisonStage[]; label: string };
+  /** Cohort leads stored as lost without a loss event; counted as open, not lost. */
+  conflicts?: number;
 }) {
   const total = funnel.total;
   return (
@@ -72,6 +75,12 @@ export function FunnelChart({
             </span>{" "}
             ({formatPercent(drop.conversion)} convert).
           </>
+        )}
+        {conflicts > 0 && (
+          <span className="mt-1 block text-warning-foreground">
+            {formatNumber(conflicts)} {conflicts === 1 ? "lead is" : "leads are"} stored as lost but excluded from
+            genuine losses, because no loss event or loss reason is recorded.
+          </span>
         )}
       </p>
     </div>

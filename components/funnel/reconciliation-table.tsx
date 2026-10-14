@@ -1,3 +1,4 @@
+import { InfoTip } from "@/components/dashboard/info-tip";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { STAGE_LABELS } from "@/lib/analytics/definitions";
 import type { FunnelReconciliation } from "@/lib/analytics/leaks";
@@ -23,7 +24,15 @@ export function ReconciliationTable({
             <TableHead className="text-right">Reached</TableHead>
             <TableHead className="text-right">Moved on</TableHead>
             <TableHead className="text-right">Lost here</TableHead>
-            <TableHead className="text-right">Still here</TableHead>
+            <TableHead className="text-right">
+              <span className="inline-flex items-center gap-1">
+                Still here
+                <InfoTip label="Still here">
+                  Leads currently at this stage. &ldquo;Stored as lost&rdquo; leads are included here, not in Lost here:
+                  they are excluded from genuine losses because no loss event or loss reason is recorded.
+                </InfoTip>
+              </span>
+            </TableHead>
             <TableHead className="text-right">Loss rate</TableHead>
             {showCompany && <TableHead className="pr-4 text-right">Company loss rate</TableHead>}
           </TableRow>

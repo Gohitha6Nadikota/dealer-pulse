@@ -151,7 +151,7 @@ export function LeadTable({
                 {showRep && <TableCell>{r.rep.name}</TableCell>}
                 <TableCell>
                   <StageBadge status={r.status} />
-                  {r.dataQualityIssue && (
+                  {r.statusConflict && (
                     <span className="mt-0.5 block text-[11px] text-warning-foreground">Stored as lost</span>
                   )}
                 </TableCell>
@@ -171,6 +171,12 @@ export function LeadTable({
       <p className="px-4 text-xs text-muted-foreground" role="status" aria-live="polite">
         Showing {formatNumber(visible.length)} of {formatNumber(bucket === "all" ? counts.all : counts[bucket])} leads
       </p>
+      {visible.some((r) => r.statusConflict) && (
+        <p className="px-4 text-xs text-warning-foreground">
+          Stored as lost: excluded from genuine losses because no loss event or loss reason is recorded. Treated as open
+          at the last stage until the CRM status is corrected.
+        </p>
+      )}
 
       <LeadTimelineSheet lead={selected} onOpenChange={(open) => !open && setSelectedId(null)} />
     </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ActionFilterBar } from "@/components/actions/action-filter-bar";
 import { ActionTable } from "@/components/actions/action-table";
+import { StatusConflictExplainer } from "@/components/actions/status-conflict-explainer";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -87,6 +88,10 @@ function ActionSections({ view }: { view: ActionCenterView }) {
           detail={`${formatNumber(summary.byReason.status_conflict)} CRM status conflicts to fix`}
         />
       </div>
+
+      {params.reason === "status_conflict" && (
+        <StatusConflictExplainer summary={view.statusConflicts} filters={filters} params={params} />
+      )}
 
       <SectionCard
         title="What to do"

@@ -15,6 +15,7 @@ import {
   type ActionSummary,
 } from "@/lib/analytics/action-center";
 import { delayReasons, type DelaySummary } from "@/lib/analytics/actions";
+import { statusConflictSummary, type StatusConflictSummary } from "@/lib/analytics/status-conflicts";
 import type { Filters } from "@/lib/filters";
 import type { Dataset } from "@/lib/types";
 
@@ -37,6 +38,8 @@ export type ActionCenterView = {
   delays: DelaySummary;
   /** Total items before reason/severity/owner filters (branch applied). */
   unfilteredTotal: number;
+  /** Status-conflict finding within the branch filter. */
+  statusConflicts: StatusConflictSummary;
 };
 
 export function buildActionCenter(ds: Dataset, filters: Filters, params: ActionParams): ActionCenterView {
@@ -67,5 +70,9 @@ export function buildActionCenter(ds: Dataset, filters: Filters, params: ActionP
     owners: [...ownerMap.values()].sort((a, b) => a.name.localeCompare(b.name)),
     delays: delayReasons(scopeLeads),
     unfilteredTotal: all.length,
+    statusConflicts: statusConflictSummary(
+      scopeLeads,
+      filters.branchId ? ds.branches.filter((b) => b.id === filters.branchId) : ds.branches,
+    ),
   };
 }

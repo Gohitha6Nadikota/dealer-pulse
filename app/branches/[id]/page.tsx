@@ -11,12 +11,14 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { RepTable } from "@/components/dashboard/rep-table";
 import { SectionCard } from "@/components/dashboard/section-card";
+import { StatusConflictNotice } from "@/components/dashboard/status-conflict-notice";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { LeadTable } from "@/components/leads/lead-table";
 import { actionsHref } from "@/lib/action-params";
 import { buildBranchView } from "@/lib/analytics/branch-view";
+import { statusConflictNotice } from "@/lib/analytics/status-conflicts";
 import { getBranch, getDataset } from "@/lib/data";
 import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
 import { formatDate, formatNumber, formatRange } from "@/lib/format";
@@ -77,10 +79,14 @@ async function BranchContent({
       >
         <FilterBar path={`/branches/${branch.id}`} filters={filters} months={ds.months} />
       </PageHeader>
+      <StatusConflictNotice
+        notice={statusConflictNotice(view.statusConflicts, branch.name)}
+        href={actionsHref({ ...filters, branchId: branch.id }, { reason: "status_conflict" })}
+      />
 
       <PendingRegion className="flex flex-col gap-6">
         <InsightBanner insight={view.insight} />
-        <KpiStrip summary={view} asOf={asOf} />
+        <KpiStrip summary={view} asOf={asOf} pipelineConflicts={view.statusConflicts.count} />
 
         <div className="grid gap-4 xl:grid-cols-5">
           <SectionCard
@@ -102,6 +108,7 @@ async function BranchContent({
                 funnel={view.funnel}
                 drop={view.funnelDrop}
                 comparison={{ stages: view.funnelVsCompany, label: "company" }}
+                conflicts={view.funnelConflicts}
               />
             ) : (
               <EmptyState title="No new leads in this period" className="py-8" />

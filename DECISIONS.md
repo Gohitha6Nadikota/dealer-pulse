@@ -108,6 +108,8 @@ The date filter (`?range=3m|6m|all` or `?from=YYYY-MM&to=YYYY-MM`) changes **per
 
 **How they appear:** derived status (open at their last stage), labelled "Stored as lost" wherever they're listed. They are **never counted as losses**: the funnel puts them in "still here (stored as lost)". They appear in the Action Center as "Status conflict" items (severity "Review" unless they're also idle) so someone corrects the record. The funnel page has a dedicated investigation section with the breakdown by branch.
 
+**Where the warning shows:** a compact "CRM data quality issue" notice near the top of the Overview, and of any branch or officer page with affected leads. It links to `/actions?reason=status_conflict`, where an explainer covers what is inconsistent, how it is treated and why it needs review. Open-pipeline figures and the branch table say how many leads are "stored as lost", and funnels note that these are excluded from genuine losses. The notice is never date-filtered: the finding is about the dataset, not a period. It reads from one shared selector (`lib/analytics/status-conflicts.ts`), never from a hard-coded list.
+
 **The honest caveat:** the data can't prove these leads are alive. It can only show the stored status has no evidence behind it. That uncertainty is why the forecast is shown both ways (next section).
 
 ---
@@ -254,7 +256,7 @@ The win-rate rules need at least 5 outcomes. Comparison rules are skipped when t
 - **Client components** are limited to the filter bars, the chart, the lead and action tables (search, sort, timeline drawer) and navigation. They receive trimmed rows (no phone numbers, notes already sanitised).
 - **Real 404s:** detail pages are prerendered via `generateStaticParams`, but with streaming a `notFound()` inside the page would return HTTP 200. `proxy.ts` checks branch and officer IDs against the dataset before rendering and rewrites unknown ones to the not-found page, giving a true 404.
 - **UI:** Tailwind v4 and shadcn/ui (Radix), Recharts for the trend chart, one accent colour (blue), and status colours (green, amber, red) reserved for health and severity, always with an icon and a label.
-- **Tests:** Vitest, 181 tests across 19 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths and real-data pins.
+- **Tests:** Vitest, 208 tests across 21 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
 
 ### UTC handling
 

@@ -1,5 +1,6 @@
 /** Converts enriched leads to the slim, serializable rows the lead table receives. */
 import { THRESHOLDS, isOpenStage } from "@/lib/analytics/definitions";
+import { isStatusConflict } from "@/lib/analytics/status-conflicts";
 import { bucketOf, type LeadRow } from "@/lib/lead-table";
 import type { Lead } from "@/lib/types";
 
@@ -25,6 +26,7 @@ export function toLeadRow(lead: Lead): LeadRow {
       ? { daysToDeliver: lead.delivery.days_to_deliver, delayReason: lead.delivery.delay_reason }
       : null,
     dataQualityIssue: lead.dataQualityIssue,
+    statusConflict: isStatusConflict(lead),
     history: lead.history,
   };
 }

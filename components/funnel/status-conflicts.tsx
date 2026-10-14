@@ -8,7 +8,6 @@ import { formatDate, formatNumber, formatPercent } from "@/lib/format";
 /** The leads stored as "lost" with no loss event: what we know, and how they're treated. */
 export function StatusConflicts({ view }: { view: FunnelView }) {
   const sc = view.statusConflicts;
-  const flagged = sc.byBranch.filter((b) => b.allOpenAreConflicts);
   if (!sc.leads.length) {
     return <p className="px-4 text-sm text-muted-foreground">No leads in this scope are stored as lost without a loss event.</p>;
   }
@@ -20,7 +19,7 @@ export function StatusConflicts({ view }: { view: FunnelView }) {
             <span className="font-medium">{formatNumber(sc.leads.length)} leads</span> have the status &ldquo;lost&rdquo;, but
             their history has no loss event and none has a loss reason. All were created between{" "}
             {sc.createdFrom && formatDate(sc.createdFrom)} and {sc.createdTo && formatDate(sc.createdTo)}, and none has been
-            idle more than {formatNumber(sc.maxDaysIdle)} days. Their latest notes read as active conversations (see below).
+            idle more than {formatNumber(sc.maxDaysIdle)} days. Their histories and latest notes suggest ongoing conversations, which still needs verifying (see below).
           </p>
           <p className="text-muted-foreground">
             They are treated as <span className="text-foreground">open at their last stage</span>: never counted as losses,
@@ -30,7 +29,7 @@ export function StatusConflicts({ view }: { view: FunnelView }) {
             </Link>{" "}
             so the status can be corrected.
           </p>
-          {flagged.map((b) => (
+          {sc.fullyAffected.map((b) => (
             <p key={b.branch.id} className="rounded-md bg-warning-surface p-3 text-warning-foreground">
               All {formatNumber(b.openLeads)} of {b.branch.name}&apos;s open leads are stored as lost. Its CRM statuses for
               in-progress leads can&apos;t be trusted until this is fixed.

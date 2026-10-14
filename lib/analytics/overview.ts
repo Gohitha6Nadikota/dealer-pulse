@@ -14,6 +14,7 @@ import {
   type BranchHealthRow,
   type ScopeSummary,
 } from "@/lib/analytics/scope";
+import { statusConflictSummary, type StatusConflictSummary } from "@/lib/analytics/status-conflicts";
 import type { Filters } from "@/lib/filters";
 import type { Branch, Dataset } from "@/lib/types";
 
@@ -28,6 +29,8 @@ export type Overview = ScopeSummary & {
   /** Branch scope only: that branch's sales officers. */
   reps: RepRow[];
   insight: Insight;
+  /** Data-quality finding for the scope; never date-filtered. */
+  statusConflicts: StatusConflictSummary;
 };
 
 export function buildOverview(ds: Dataset, filters: Filters): Overview {
@@ -46,6 +49,7 @@ export function buildOverview(ds: Dataset, filters: Filters): Overview {
     filters,
     branch,
     scopeName: branch?.name ?? "All branches",
+    statusConflicts: statusConflictSummary(leads, branch ? [branch] : ds.branches),
     branches,
     reps,
     insight: overviewInsight({

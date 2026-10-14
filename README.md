@@ -95,7 +95,7 @@ Then open http://localhost:3000.
 | `npm start` | Serve the production build |
 | `npm run audit` | Data audit: shape, AS_OF, targets vs actuals, status/history conflicts, note contradictions, template bugs, delivery censoring, integrity |
 | `npm run typecheck` | `tsc --noEmit` (strict) |
-| `npm test` | Vitest, once (181 tests) |
+| `npm test` | Vitest, once (208 tests) |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run lint` | ESLint (Next core-web-vitals and TypeScript rules) |
 
@@ -124,7 +124,7 @@ The data is synthetic: 5 branches, 30 people (5 managers who own no leads, 25 sa
 npm test
 ```
 
-181 tests across 19 files cover:
+208 tests across 21 files cover:
 
 - validation and enrichment
 - every metric, the filters and URL round-trips, and formatting
@@ -132,6 +132,7 @@ npm test
 - the view models for each page
 - Action Center prioritisation and de-duplication
 - funnel reconciliation, leak and small-sample rules, and the forecast maths
+- the status-conflict selector, warning wording and its independence from the date range, plus server-rendered markup of the warning and explainer
 - real-dataset pins: the audited numbers, plus a hand-check of one branch (Lakeside) recomputed from raw JSON
 
 UI flows were checked in headless Chrome (navigation, filters, the timeline drawer, 404s); there are no DOM component tests.

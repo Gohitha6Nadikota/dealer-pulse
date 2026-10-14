@@ -10,11 +10,13 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
 import { PipelineCard } from "@/components/dashboard/pipeline-card";
 import { SectionCard } from "@/components/dashboard/section-card";
+import { StatusConflictNotice } from "@/components/dashboard/status-conflict-notice";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { LeadTable } from "@/components/leads/lead-table";
 import { buildRepView } from "@/lib/analytics/rep-view";
+import { statusConflictNotice } from "@/lib/analytics/status-conflicts";
 import { actionsHref } from "@/lib/action-params";
 import { getDataset, getRep } from "@/lib/data";
 import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
@@ -80,12 +82,17 @@ async function RepContent({ id, searchParams }: { id: string } & Pick<PageProps<
       >
         <FilterBar path={`/reps/${rep.id}`} filters={filters} months={ds.months} />
       </PageHeader>
+      <StatusConflictNotice
+        notice={statusConflictNotice(view.statusConflicts, rep.name)}
+        href={actionsHref(filters, { reason: "status_conflict", ownerId: rep.id })}
+      />
 
       <PendingRegion className="flex flex-col gap-6">
         <InsightBanner insight={view.insight} />
         <KpiStrip
           summary={view}
           asOf={asOf}
+          pipelineConflicts={view.statusConflicts.count}
           revenueDetail={
             view.revenueShare !== null ? `${formatPercent(view.revenueShare)} of branch revenue · no rep targets` : "No rep targets in the data"
           }
@@ -110,6 +117,7 @@ async function RepContent({ id, searchParams }: { id: string } & Pick<PageProps<
                 funnel={view.funnel}
                 drop={view.funnelDrop}
                 comparison={{ stages: view.funnelVsBranch, label: branch.name }}
+                conflicts={view.funnelConflicts}
               />
             ) : (
               <EmptyState title="No new leads in this period" className="py-8" />

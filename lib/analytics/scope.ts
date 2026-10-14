@@ -19,6 +19,7 @@ import { branchHealth, type Health } from "@/lib/analytics/health";
 import { MIN_BASE_FOR_PERCENT } from "@/lib/analytics/insights";
 import { kpis, sumBy, type Kpis } from "@/lib/analytics/kpis";
 import type { MonthRange } from "@/lib/analytics/range";
+import { isStatusConflict } from "@/lib/analytics/status-conflicts";
 import { monthlyTrend, type TrendPoint } from "@/lib/analytics/trend";
 import { previousPeriod } from "@/lib/filters";
 import type { Dataset, Lead, SalesRep, Target } from "@/lib/types";
@@ -74,6 +75,8 @@ export type ScopeSummary = {
   /** Cohort: leads created in the selected range. */
   funnel: Funnel;
   funnelDrop: ReturnType<typeof biggestDrop>;
+  /** Leads in the funnel cohort stored as lost without a loss event (counted as open, not lost). */
+  funnelConflicts: number;
   attention: Attention;
   /** True when the selection has no bookings, losses or new leads. */
   isEmpty: boolean;
@@ -155,7 +158,8 @@ export function summarizeScope(
   const previousRange = previousPeriod(range, ds.months);
   const current = kpis(leads, targets, range);
   const previous = previousRange ? kpis(leads, targets, previousRange) : null;
-  const cohort = funnel(createdIn(leads, range));
+  const cohortLeads = createdIn(leads, range);
+  const cohort = funnel(cohortLeads);
   return {
     range,
     previousRange,
@@ -167,6 +171,7 @@ export function summarizeScope(
     ),
     funnel: cohort,
     funnelDrop: biggestDrop(cohort),
+    funnelConflicts: cohortLeads.filter(isStatusConflict).length,
     attention: attentionFor(ds, leads),
     isEmpty: current.bookedUnits === 0 && current.losses === 0 && cohort.total === 0,
   };
