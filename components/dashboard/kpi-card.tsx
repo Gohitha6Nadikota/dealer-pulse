@@ -29,8 +29,8 @@ export function KpiCard({
   const Arrow = delta ? ARROWS[delta.direction] : null;
   return (
     <div className="flex min-w-0 flex-col gap-1 rounded-xl border bg-card p-4">
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span className="truncate">{label}</span>
+      <div className="flex items-start gap-1 text-sm leading-tight text-muted-foreground">
+        <span className="min-w-0 text-pretty">{label}</span>
         <InfoTip label={label}>{help}</InfoTip>
       </div>
       <p className="text-2xl font-semibold tracking-tight tabular-nums">{value}</p>

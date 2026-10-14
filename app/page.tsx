@@ -22,7 +22,8 @@ import { hrefWithFilters, parseFilters } from "@/lib/filters";
 import { formatDate, formatNumber, formatRange } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
 
-export const metadata: Metadata = { title: "Overview" };
+// The root layout's title template only applies to nested segments, so the root page sets its full title.
+export const metadata: Metadata = { title: { absolute: "Overview · DealerPulse" } };
 
 export default function OverviewPage({ searchParams }: PageProps<"/">) {
   return (
