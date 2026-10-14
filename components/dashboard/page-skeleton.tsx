@@ -1,9 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Mirrors the Overview layout so nothing jumps when data arrives. */
-export function OverviewSkeleton() {
+/** Mirrors the dashboard page layout so nothing jumps when data arrives. */
+export function PageSkeleton({ label = "Loading" }: { label?: string }) {
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Loading overview">
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label={label}>
       <div className="flex flex-wrap gap-2">
         <Skeleton className="h-8 w-96 max-w-full" />
         <Skeleton className="h-8 w-40" />

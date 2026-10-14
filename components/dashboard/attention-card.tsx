@@ -2,7 +2,7 @@ import { ClockAlertIcon, HandshakeIcon, PhoneCallIcon, TruckIcon } from "lucide-
 import { InfoTip } from "@/components/dashboard/info-tip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { THRESHOLDS } from "@/lib/analytics/definitions";
-import type { AttentionItem, AttentionList, Overview } from "@/lib/analytics/overview";
+import type { Attention, AttentionItem, AttentionList } from "@/lib/analytics/scope";
 import { formatDate, formatINR, formatNumber } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
 
@@ -48,8 +48,7 @@ const LISTS: ListSpec[] = [
 ];
 
 /** "Needs attention": each item says who should do what, today. */
-export function AttentionCard({ overview }: { overview: Overview }) {
-  const { attention, asOf } = overview;
+export function AttentionCard({ attention, asOf }: { attention: Attention; asOf: string }) {
   const totalValue = attention.stale.value + attention.stuck.value + attention.negotiations.value;
   return (
     <Card className="gap-4">
@@ -109,7 +108,7 @@ function AttentionColumn({ spec, list }: { spec: ListSpec; list: AttentionList }
           ))}
           {list.count > list.top.length && (
             <li className="text-xs text-muted-foreground">
-              +{formatNumber(list.count - list.top.length)} more in the Action Center (coming next)
+              +{formatNumber(list.count - list.top.length)} more
             </li>
           )}
         </ul>

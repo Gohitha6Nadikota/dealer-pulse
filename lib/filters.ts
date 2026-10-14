@@ -91,3 +91,26 @@ export function previousPeriod(range: MonthRange, months: string[]): MonthRange 
   if (start - length < 0) return null;
   return { from: months[start - length], to: months[start - 1] };
 }
+
+/**
+ * Filters for a page whose scope is already in the path (/branches/B2,
+ * /reps/SR3): only the date range applies, so any ?branch= is dropped.
+ */
+export function parseRangeFilters(params: SearchParams, ctx: FilterContext): Filters {
+  return { ...parseFilters(params, ctx), branchId: null };
+}
+
+/** Query params that carry the date range only (for nav links between scopes). */
+export const RANGE_PARAMS = ["range", "from", "to"] as const;
+
+/** Keep only the date-range params from a query string: "?range=6m&branch=B2" → "?range=6m". */
+export function rangeQuery(search: string): string {
+  const source = new URLSearchParams(search);
+  const kept = new URLSearchParams();
+  for (const key of RANGE_PARAMS) {
+    const value = source.get(key);
+    if (value) kept.set(key, value);
+  }
+  const query = kept.toString();
+  return query ? `?${query}` : "";
+}

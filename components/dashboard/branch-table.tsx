@@ -1,10 +1,9 @@
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
-import { HealthBadge } from "@/components/dashboard/health-badge";
+import { HealthBadgeWithReasons } from "@/components/dashboard/health-badge";
 import { InfoTip } from "@/components/dashboard/info-tip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { BranchHealthRow } from "@/lib/analytics/overview";
+import type { BranchHealthRow } from "@/lib/analytics/scope";
 import { hrefWithFilters, type Filters } from "@/lib/filters";
 import { formatDays, formatINR, formatNumber, formatPercent } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
@@ -14,7 +13,7 @@ export function BranchTable({ rows, filters }: { rows: BranchHealthRow[]; filter
     <Table className="min-w-[760px] tabular-nums">
       <TableHeader>
         <TableRow>
-          <TableHead>Branch</TableHead>
+          <TableHead className="pl-4">Branch</TableHead>
           <TableHead>
             <span className="inline-flex items-center gap-1">
               Health <InfoTip label="Health">{METRIC_HELP.health}</InfoTip>
@@ -37,34 +36,17 @@ export function BranchTable({ rows, filters }: { rows: BranchHealthRow[]; filter
       </TableHeader>
       <TableBody>
         {rows.map(({ branch, kpis, health }) => {
-          const href = hrefWithFilters("/", filters, { branchId: branch.id });
+          const href = hrefWithFilters(`/branches/${branch.id}`, filters, { branchId: null });
           return (
             <TableRow key={branch.id} className="group">
-              <TableCell>
+              <TableCell className="pl-4">
                 <Link href={href} className="font-medium hover:underline focus-visible:underline">
                   {branch.name}
                 </Link>
                 <span className="block text-xs text-muted-foreground">{branch.city}</span>
               </TableCell>
               <TableCell>
-                {health.reasons.length ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button type="button" className="rounded-full focus-visible:outline-2 focus-visible:outline-ring">
-                        <HealthBadge health={health} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <ul className="space-y-0.5">
-                        {health.reasons.map((r) => (
-                          <li key={r}>{r}</li>
-                        ))}
-                      </ul>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <HealthBadge health={health} />
-                )}
+                <HealthBadgeWithReasons health={health} />
               </TableCell>
               <TableCell className="text-right font-medium">{formatINR(kpis.bookedRevenue)}</TableCell>
               <TableCell className="text-right">{formatNumber(kpis.bookedUnits)}</TableCell>

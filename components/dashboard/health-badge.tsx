@@ -1,5 +1,6 @@
 import { AlertTriangleIcon, CheckCircle2Icon, EyeIcon } from "lucide-react";
 import { HEALTH_LABELS, type Health } from "@/lib/analytics/health";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const STYLES = {
@@ -22,5 +23,27 @@ export function HealthBadge({ health, className }: { health: Health; className?:
       <Icon className="size-3.5" aria-hidden />
       {HEALTH_LABELS[health.level]}
     </span>
+  );
+}
+
+/** Health badge that reveals its reasons on hover or focus. */
+export function HealthBadgeWithReasons({ health }: { health: Health }) {
+  if (!health.reasons.length) return <HealthBadge health={health} />;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="rounded-full focus-visible:outline-2 focus-visible:outline-ring">
+          <HealthBadge health={health} />
+          <span className="sr-only">: {health.reasons.join("; ")}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <ul className="space-y-0.5">
+          {health.reasons.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      </TooltipContent>
+    </Tooltip>
   );
 }

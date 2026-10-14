@@ -24,16 +24,14 @@ export type Insight = {
 };
 
 export type InsightInput = {
-  /** "the company" or a branch name. */
-  scopeName: string;
   range: MonthRange;
   current: Kpis;
   previous: Kpis | null;
   previousRange: MonthRange | null;
-  /** Company scope: every branch with health. Branch scope: empty. */
+  /** Company scope: every branch with health. Otherwise empty. */
   branches: { name: string; kpis: Kpis; health: Health }[];
-  /** Branch scope: the company KPIs to compare against. */
-  company: Kpis | null;
+  /** Branch or rep scope: what to compare against, e.g. the company ("company-wide") or the branch ("branch average"). */
+  benchmark: { kpis: Kpis; label: string } | null;
   stuckOrders: number;
   staleLeads: number;
   staleValue: number;
@@ -71,12 +69,13 @@ function bookingsClause(input: InsightInput): { text: string; change: number | n
 }
 
 function laggardClause(input: InsightInput): string | null {
-  if (input.company) {
-    const { current, company } = input;
-    if (current.winRate === null || company.winRate === null) return null;
-    const gap = current.winRate - company.winRate;
-    if (Math.abs(gap) < 0.03) return `win rate is in line with the company at ${formatPercent(current.winRate)}`;
-    return `win rate is ${formatPercent(current.winRate)} vs ${formatPercent(company.winRate)} company-wide`;
+  if (input.benchmark) {
+    const { current } = input;
+    const { kpis: bench, label } = input.benchmark;
+    if (current.winRate === null || bench.winRate === null) return null;
+    const gap = current.winRate - bench.winRate;
+    if (Math.abs(gap) < 0.03) return `win rate is in line at ${formatPercent(current.winRate)} (${label})`;
+    return `win rate is ${formatPercent(current.winRate)} vs ${formatPercent(bench.winRate)} ${label}`;
   }
   const worst = input.branches
     .filter((b) => b.health.level === "act")

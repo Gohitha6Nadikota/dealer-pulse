@@ -28,7 +28,8 @@ export function FilterBar({
   path: string;
   filters: Filters;
   months: string[];
-  branches: { id: string; name: string }[];
+  /** Omit on pages already scoped by path (branch or officer pages). */
+  branches?: { id: string; name: string }[];
 }) {
   const { pending, navigate } = useFilterNavigation();
   const go = (changes: Partial<Filters>) => navigate(hrefWithFilters(path, filters, changes));
@@ -81,22 +82,24 @@ export function FilterBar({
         </div>
       )}
 
-      <Select
-        value={filters.branchId ?? ALL_BRANCHES}
-        onValueChange={(v) => go({ branchId: v === ALL_BRANCHES ? null : v })}
-      >
-        <SelectTrigger size="sm" aria-label="Branch" className="min-w-40 bg-card">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL_BRANCHES}>All branches</SelectItem>
-          {branches.map((b) => (
-            <SelectItem key={b.id} value={b.id}>
-              {b.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {branches && (
+        <Select
+          value={filters.branchId ?? ALL_BRANCHES}
+          onValueChange={(v) => go({ branchId: v === ALL_BRANCHES ? null : v })}
+        >
+          <SelectTrigger size="sm" aria-label="Branch" className="min-w-40 bg-card">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_BRANCHES}>All branches</SelectItem>
+            {branches.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {!isDefault && (
         <Button variant="ghost" size="sm" onClick={() => navigate(path)} className="text-muted-foreground">

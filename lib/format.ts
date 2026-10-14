@@ -83,16 +83,10 @@ export function formatRangeCompact(range: MonthRange): string {
     : `${formatMonthShort(range.from)} – ${formatMonthShort(range.to)}`;
 }
 
-const dateFormat = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-/** ISO timestamp → "31 Dec 2025" (UTC). */
+/** ISO timestamp or date → "31 Dec 2025" (UTC, same month names as the rest of the app). */
 export function formatDate(iso: string): string {
-  return dateFormat.format(new Date(iso));
+  const d = new Date(iso);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
 /** "test_drive" → "Test drive", "walk_in" → "Walk in". */

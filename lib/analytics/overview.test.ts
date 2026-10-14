@@ -92,13 +92,12 @@ describe("overviewInsight rules", () => {
   const base = (over: Partial<InsightInput>): InsightInput => {
     const k = kpis([], null, { from: "2025-10", to: "2025-10" });
     return {
-      scopeName: "the company",
       range: { from: "2025-10", to: "2025-12" },
       current: { ...k, bookedUnits: 80 },
       previous: { ...k, bookedUnits: 100 },
       previousRange: { from: "2025-07", to: "2025-09" },
       branches: [],
-      company: null,
+      benchmark: null,
       stuckOrders: 0,
       staleLeads: 0,
       staleValue: 0,

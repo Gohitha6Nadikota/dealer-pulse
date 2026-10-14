@@ -63,6 +63,7 @@ describe("days and dates", () => {
 
   it("formats dates in UTC so AS_OF stays on 31 Dec", () => {
     expect(formatDate("2025-12-31T19:10:00.000Z")).toBe("31 Dec 2025");
+    expect(formatDate("2024-09-25")).toBe("25 Sep 2024");
   });
 
   it("humanizes enum values", () => {

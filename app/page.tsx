@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AttentionCard } from "@/components/dashboard/attention-card";
+import { BranchTable } from "@/components/dashboard/branch-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { FunnelChart } from "@/components/dashboard/funnel-chart";
+import { InsightBanner } from "@/components/dashboard/insight-banner";
+import { KpiStrip } from "@/components/dashboard/kpi-strip";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { PageSkeleton } from "@/components/dashboard/page-skeleton";
+import { RepTable } from "@/components/dashboard/rep-table";
 import { SectionCard } from "@/components/dashboard/section-card";
+import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
-import { AttentionCard } from "@/components/overview/attention-card";
-import { BranchTable } from "@/components/overview/branch-table";
-import { FunnelChart } from "@/components/overview/funnel-card";
-import { InsightBanner } from "@/components/overview/insight-banner";
-import { KpiCard, KpiGroup } from "@/components/overview/kpi-card";
-import { OverviewSkeleton } from "@/components/overview/overview-skeleton";
-import { RepTable } from "@/components/overview/rep-table";
-import { TrendChart } from "@/components/overview/trend-chart";
 import { Button } from "@/components/ui/button";
 import { buildOverview, type Overview } from "@/lib/analytics/overview";
 import { getDataset } from "@/lib/data";
 import { hrefWithFilters, parseFilters } from "@/lib/filters";
-import { formatDate, formatDays, formatINR, formatNumber, formatPercent, formatRange, formatRangeCompact } from "@/lib/format";
+import { formatDate, formatNumber, formatRange } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
 
 export const metadata: Metadata = { title: "Overview" };
@@ -25,7 +26,7 @@ export const metadata: Metadata = { title: "Overview" };
 export default function OverviewPage({ searchParams }: PageProps<"/">) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <Suspense fallback={<OverviewSkeleton />}>
+      <Suspense fallback={<PageSkeleton label="Loading overview" />}>
         <OverviewContent searchParams={searchParams} />
       </Suspense>
     </div>
@@ -42,28 +43,32 @@ async function OverviewContent({ searchParams }: Pick<PageProps<"/">, "searchPar
 
   return (
     <FilterTransition>
-      <header className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        title="Overview"
+        subtitle={
+          <>
             {overview.scopeName} · {formatRange(filters.range)}
             {overview.branch && (
               <>
                 {" · "}
-                <Link href={hrefWithFilters("/", filters, { branchId: null })} className="text-primary hover:underline">
-                  Back to all branches
+                <Link
+                  href={hrefWithFilters(`/branches/${overview.branch.id}`, filters, { branchId: null })}
+                  className="text-primary hover:underline"
+                >
+                  Open branch page
                 </Link>
               </>
             )}
-          </p>
-        </div>
+          </>
+        }
+      >
         <FilterBar
           path="/"
           filters={filters}
           months={ds.months}
           branches={ds.branches.map((b) => ({ id: b.id, name: b.name }))}
         />
-      </header>
+      </PageHeader>
       <PendingRegion className="flex flex-col gap-6">
         {overview.isEmpty ? (
           <EmptyState
@@ -84,74 +89,11 @@ async function OverviewContent({ searchParams }: Pick<PageProps<"/">, "searchPar
 }
 
 function OverviewSections({ overview }: { overview: Overview }) {
-  const { kpis: k, deltas, previousRange, filters, asOf } = overview;
-  const deltaContext = previousRange ? `vs ${formatRangeCompact(previousRange)}` : undefined;
-
+  const { filters, asOf } = overview;
   return (
     <>
       <InsightBanner insight={overview.insight} />
-
-      <div className="grid gap-4 2xl:grid-cols-[2fr_1fr]">
-        <KpiGroup
-          title="Performance"
-          badge={`${formatRange(filters.range)}${previousRange ? "" : " · no earlier period to compare"}`}
-        >
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <KpiCard
-              label="Booked revenue"
-              value={formatINR(k.bookedRevenue)}
-              help={METRIC_HELP.bookedRevenue}
-              delta={deltas.bookedRevenue}
-              deltaContext={deltaContext}
-              detail={
-                k.targetRevenue
-                  ? `${formatPercent(k.revenueAttainment)} of ${formatINR(k.targetRevenue)} target`
-                  : undefined
-              }
-            />
-            <KpiCard
-              label="Units booked"
-              value={formatNumber(k.bookedUnits)}
-              help={METRIC_HELP.bookedUnits}
-              delta={deltas.bookedUnits}
-              deltaContext={deltaContext}
-              detail={`${formatNumber(k.deliveredUnits)} delivered so far`}
-            />
-            <KpiCard
-              label="Win rate"
-              value={formatPercent(k.winRate)}
-              help={METRIC_HELP.winRate}
-              delta={deltas.winRate}
-              deltaContext={deltaContext}
-              detail={`${formatNumber(k.wins)} won · ${formatNumber(k.losses)} lost`}
-            />
-            <KpiCard
-              label="Avg delivery time"
-              value={formatDays(k.avgDaysToDeliver)}
-              help={METRIC_HELP.avgDaysToDeliver}
-              delta={deltas.avgDaysToDeliver}
-              deltaContext={deltaContext}
-              detail="Order to delivery"
-            />
-          </div>
-        </KpiGroup>
-        <KpiGroup title="Right now" badge={`as of ${formatDate(asOf)}`}>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-2">
-            <KpiCard
-              label="Open pipeline"
-              value={formatINR(k.openPipelineValue)}
-              help={METRIC_HELP.openPipeline}
-              detail={`${formatNumber(k.openPipelineCount)} leads in progress`}
-            />
-            <KpiCard
-              label="Awaiting delivery"
-              value={formatNumber(k.awaitingDeliveryCount)}
-              help={METRIC_HELP.awaitingDelivery}
-              detail={`${formatINR(k.awaitingDeliveryValue)} booked, not delivered`}
-            />
-          </div>
-        </KpiGroup>
-      </div>
+      <KpiStrip summary={overview} asOf={asOf} />
 
       <div className="grid gap-4 xl:grid-cols-5">
         <SectionCard
@@ -176,7 +118,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
         </SectionCard>
       </div>
 
-      <AttentionCard overview={overview} />
+      <AttentionCard attention={overview.attention} asOf={asOf} />
 
       {overview.branch ? (
         <SectionCard
@@ -185,7 +127,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
           contentClassName="px-0"
         >
           {overview.reps.length ? (
-            <RepTable rows={overview.reps} />
+            <RepTable rows={overview.reps} filters={filters} />
           ) : (
             <EmptyState title="No sales officers in this branch" className="mx-4" />
           )}
@@ -193,7 +135,7 @@ function OverviewSections({ overview }: { overview: Overview }) {
       ) : (
         <SectionCard
           title="Branch comparison"
-          description={`${formatRange(filters.range)} · select a branch to see its team`}
+          description={`${formatRange(filters.range)} · select a branch for its full page`}
           help={METRIC_HELP.health}
           contentClassName="px-0"
         >

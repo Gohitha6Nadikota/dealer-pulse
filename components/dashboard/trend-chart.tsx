@@ -99,6 +99,7 @@ export function TrendChart({ data }: { data: Point[] }) {
             tickMargin={8}
           />
           <YAxis
+            allowDecimals={false}
             tickFormatter={(v: number) => series.format(v)}
             tickLine={false}
             axisLine={false}
