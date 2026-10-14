@@ -16,6 +16,7 @@ import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { Button } from "@/components/ui/button";
 import { buildOverview, type Overview } from "@/lib/analytics/overview";
+import { actionsHref } from "@/lib/action-params";
 import { getDataset } from "@/lib/data";
 import { hrefWithFilters, parseFilters } from "@/lib/filters";
 import { formatDate, formatNumber, formatRange } from "@/lib/format";
@@ -118,12 +119,12 @@ function OverviewSections({ overview }: { overview: Overview }) {
         </SectionCard>
       </div>
 
-      <AttentionCard attention={overview.attention} asOf={asOf} />
+      <AttentionCard attention={overview.attention} asOf={asOf} href={actionsHref(filters)} />
 
       {overview.branch ? (
         <SectionCard
           title={`${overview.branch.name} sales officers`}
-          description={`Bookings and win rate in ${formatRange(filters.range)}; open and idle leads as of ${formatDate(asOf)}.`}
+          description={`Bookings and win rate in ${formatRange(filters.range)}; open and idle leads as of ${formatDate(asOf)} (UTC).`}
           contentClassName="px-0"
         >
           {overview.reps.length ? (

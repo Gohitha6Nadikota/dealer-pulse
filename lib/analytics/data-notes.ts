@@ -1,6 +1,10 @@
 /** Plain-language data caveats for the "Data notes" popover, from audited numbers. */
 import { kpis, ratio } from "@/lib/analytics/kpis";
+import { formatDate } from "@/lib/format";
 import type { Dataset } from "@/lib/types";
+
+/** India Standard Time, UTC+5:30. */
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export type DataNote = { title: string; detail: string };
 
@@ -33,6 +37,14 @@ export function dataNotes(ds: Dataset): DataNote[] {
       detail: "“comparing with {} competitor” is shown as “comparing with a competitor”.",
     });
   }
+  const istDate = formatDate(new Date(Date.parse(ds.asOf) + IST_OFFSET_MS).toISOString());
+  notes.push({
+    title: "Dates and months are in UTC",
+    detail:
+      istDate === formatDate(ds.asOf)
+        ? "Timestamps are stored in UTC and grouped into months in UTC."
+        : `Timestamps are stored in UTC and grouped into months in UTC. The latest activity is on ${formatDate(ds.asOf)} UTC, which is already ${istDate} in India.`,
+  });
   notes.push({
     title: "Recent delivery times are incomplete",
     detail: "Orders from the last few weeks that haven't been delivered yet aren't in the average, so recent months look faster than they are.",

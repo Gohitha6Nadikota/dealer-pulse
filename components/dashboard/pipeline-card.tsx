@@ -9,7 +9,7 @@ export function PipelineCard({ stages, asOf }: { stages: PipelineStage[]; asOf: 
   return (
     <SectionCard
       title="Open pipeline by stage"
-      description={`As of ${formatDate(asOf)} · not affected by the date filter`}
+      description={`As of ${formatDate(asOf)} (UTC) · not affected by the date filter`}
       help={METRIC_HELP.openPipeline}
     >
       <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">

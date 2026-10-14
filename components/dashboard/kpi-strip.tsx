@@ -64,7 +64,7 @@ export function KpiStrip({
           />
         </div>
       </KpiGroup>
-      <KpiGroup title="Right now" badge={`as of ${formatDate(asOf)}`}>
+      <KpiGroup title="Right now" badge={`as of ${formatDate(asOf)} (UTC)`}>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-2">
           <KpiCard
             label="Open pipeline"

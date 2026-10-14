@@ -1,6 +1,7 @@
-import { ClockAlertIcon, HandshakeIcon, PhoneCallIcon, TruckIcon } from "lucide-react";
+import { ArrowRightIcon, ClockAlertIcon, HandshakeIcon, PhoneCallIcon, TruckIcon } from "lucide-react";
+import Link from "next/link";
 import { InfoTip } from "@/components/dashboard/info-tip";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { THRESHOLDS } from "@/lib/analytics/definitions";
 import type { Attention, AttentionItem, AttentionList } from "@/lib/analytics/scope";
 import { formatDate, formatINR, formatNumber } from "@/lib/format";
@@ -48,7 +49,7 @@ const LISTS: ListSpec[] = [
 ];
 
 /** "Needs attention": each item says who should do what, today. */
-export function AttentionCard({ attention, asOf }: { attention: Attention; asOf: string }) {
+export function AttentionCard({ attention, asOf, href }: { attention: Attention; asOf: string; href: string }) {
   const totalValue = attention.stale.value + attention.stuck.value + attention.negotiations.value;
   return (
     <Card className="gap-4">
@@ -58,8 +59,13 @@ export function AttentionCard({ attention, asOf }: { attention: Attention; asOf:
           Needs attention
         </CardTitle>
         <CardDescription>
-          As of {formatDate(asOf)} · {formatINR(totalValue)} in deals waiting on action. Not affected by the date filter.
+          As of {formatDate(asOf)} (UTC) · {formatINR(totalValue)} in deals waiting on action. Not affected by the date filter.
         </CardDescription>
+        <CardAction>
+          <Link href={href} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            Action Center <ArrowRightIcon className="size-3.5" aria-hidden />
+          </Link>
+        </CardAction>
       </CardHeader>
       <CardContent className="grid gap-5 md:grid-cols-3 md:gap-0 md:divide-x">
         {LISTS.map((spec) => (

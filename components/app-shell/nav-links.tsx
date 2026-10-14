@@ -30,7 +30,7 @@ function NavLinksView({ onNavigate, query }: Props & { query: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Main" className="flex flex-col gap-1">
-      {NAV_ITEMS.map(({ href, label, icon: Icon, ready, also = [] }) => {
+      {NAV_ITEMS.map(({ href, label, icon: Icon, also = [] }) => {
         const active =
           href === "/" ? pathname === "/" : [href, ...also].some((p) => pathname.startsWith(p));
         const classes = cn(
@@ -39,21 +39,6 @@ function NavLinksView({ onNavigate, query }: Props & { query: string }) {
             ? "bg-sidebar-accent text-sidebar-accent-foreground"
             : "text-muted-foreground hover:bg-muted hover:text-foreground",
         );
-        if (!ready) {
-          return (
-            <span
-              key={href}
-              aria-disabled="true"
-              className={cn(classes, "cursor-not-allowed opacity-60 hover:bg-transparent hover:text-muted-foreground")}
-            >
-              <Icon className="size-4" aria-hidden />
-              {label}
-              <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
-                Soon
-              </span>
-            </span>
-          );
-        }
         return (
           <Link
             key={href}

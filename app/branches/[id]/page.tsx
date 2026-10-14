@@ -15,6 +15,7 @@ import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { LeadTable } from "@/components/leads/lead-table";
+import { actionsHref } from "@/lib/action-params";
 import { buildBranchView } from "@/lib/analytics/branch-view";
 import { getBranch, getDataset } from "@/lib/data";
 import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
@@ -110,7 +111,7 @@ async function BranchContent({
 
         <SectionCard
           title="Sales officers"
-          description={`Bookings and win rate in ${formatRange(filters.range)}; open and idle leads as of ${formatDate(asOf)}. Select an officer for their leads.`}
+          description={`Bookings and win rate in ${formatRange(filters.range)}; open and idle leads as of ${formatDate(asOf)} (UTC). Select an officer for their leads.`}
           contentClassName="px-0"
         >
           {view.reps.length ? (
@@ -120,11 +121,11 @@ async function BranchContent({
           )}
         </SectionCard>
 
-        <AttentionCard attention={view.attention} asOf={asOf} />
+        <AttentionCard attention={view.attention} asOf={asOf} href={actionsHref({ ...filters, branchId: branch.id })} />
 
         <SectionCard
           title="Open leads and orders"
-          description={`As of ${formatDate(asOf)}, not affected by the date filter. Select a lead for its timeline.`}
+          description={`As of ${formatDate(asOf)} (UTC), not affected by the date filter. Select a lead for its timeline.`}
           contentClassName="px-0"
         >
           <LeadTable rows={view.openLeads} buckets={["open", "awaiting", "all"]} defaultBucket="open" showRep />

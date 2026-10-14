@@ -32,7 +32,7 @@ export function AppShell({
             <DataNotes notes={notes} />
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-xs font-medium">
               <CalendarClockIcon className="size-3.5 text-muted-foreground" aria-hidden />
-              Data as of {formatDate(asOf)}
+              Data as of {formatDate(asOf)} <span className="text-muted-foreground">UTC</span>
             </span>
           </div>
         </header>

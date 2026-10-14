@@ -15,6 +15,7 @@ import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { LeadTable } from "@/components/leads/lead-table";
 import { buildRepView } from "@/lib/analytics/rep-view";
+import { actionsHref } from "@/lib/action-params";
 import { getDataset, getRep } from "@/lib/data";
 import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
 import { formatDate, formatNumber, formatPercent, formatRange } from "@/lib/format";
@@ -117,7 +118,7 @@ async function RepContent({ id, searchParams }: { id: string } & Pick<PageProps<
         </div>
 
         <PipelineCard stages={view.pipeline} asOf={asOf} />
-        <AttentionCard attention={view.attention} asOf={asOf} />
+        <AttentionCard attention={view.attention} asOf={asOf} href={actionsHref(filters, { ownerId: rep.id })} />
 
         <SectionCard
           title="Assigned leads"
