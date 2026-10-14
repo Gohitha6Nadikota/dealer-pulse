@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AppShell } from "@/components/app-shell/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { dataNotes } from "@/lib/analytics/data-notes";
+import { getDataset } from "@/lib/data";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,18 +17,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DealerPulse",
+  title: { default: "DealerPulse", template: "%s · DealerPulse" },
   description: "Dealership performance dashboard",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const dataset = getDataset();
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
+      <body className="min-h-full">
+        <TooltipProvider delayDuration={150}>
+          <AppShell asOf={dataset.asOf} notes={dataNotes(dataset)}>
+            {children}
+          </AppShell>
+        </TooltipProvider>
       </body>
     </html>
   );

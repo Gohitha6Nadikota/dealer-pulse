@@ -66,3 +66,20 @@ export function funnel(leads: Lead[]): Funnel {
 
   return { total: leads.length, stages, lost: lostLeads.length, lossReasons };
 }
+
+/**
+ * The pre-order step with the lowest conversion: where most leads leak.
+ * Delivery is excluded (an operations step, and censored for recent orders).
+ * null when no step has a measurable conversion.
+ */
+export function biggestDrop(f: Funnel): { from: Stage; to: Stage; conversion: number } | null {
+  let worst: { from: Stage; to: Stage; conversion: number } | null = null;
+  for (let i = 1; i < f.stages.length; i++) {
+    const step = f.stages[i];
+    if (step.stage === "delivered" || step.conversion === null) continue;
+    if (!worst || step.conversion < worst.conversion) {
+      worst = { from: f.stages[i - 1].stage, to: step.stage, conversion: step.conversion };
+    }
+  }
+  return worst;
+}
