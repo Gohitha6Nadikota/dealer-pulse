@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { DataNotesLink } from "@/components/app-shell/data-notes-link";
 import { AttentionCard } from "@/components/dashboard/attention-card";
 import { BranchTable } from "@/components/dashboard/branch-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -44,6 +45,13 @@ async function OverviewContent({ searchParams }: Pick<PageProps<"/">, "searchPar
     branchIds: ds.branches.map((b) => b.id),
   });
   const overview = buildOverview(ds, filters);
+  // A dataset finding, not a period metric: shown whatever the date range.
+  const notice = (
+    <StatusConflictNotice
+      notice={statusConflictNotice(overview.statusConflicts, overview.branch?.name ?? null)}
+      href={actionsHref(filters, { reason: "status_conflict" })}
+    />
+  );
 
   return (
     <FilterTransition>
@@ -73,41 +81,42 @@ async function OverviewContent({ searchParams }: Pick<PageProps<"/">, "searchPar
           branches={ds.branches.map((b) => ({ id: b.id, name: b.name }))}
         />
       </PageHeader>
-      {/* A dataset finding, not a period metric: shown whatever the date range. */}
-      <StatusConflictNotice
-        notice={statusConflictNotice(overview.statusConflicts, overview.branch?.name ?? null)}
-        href={actionsHref(filters, { reason: "status_conflict" })}
-      />
       <PendingRegion className="flex flex-col gap-6">
         {overview.isEmpty ? (
-          <EmptyState
-            title="No activity in this period"
-            description="No leads were created, booked or lost for this selection. Try a wider date range or another branch."
-            action={
-              <Button asChild variant="outline" size="sm" className="mt-2">
-                <Link href="/">Reset filters</Link>
-              </Button>
-            }
-          />
+          <>
+            {notice}
+            <EmptyState
+              title="No activity in this period"
+              description="No leads were created, booked or lost for this selection. Try a wider date range or another branch."
+              action={
+                <Button asChild variant="outline" size="sm" className="mt-2">
+                  <Link href="/">Reset filters</Link>
+                </Button>
+              }
+            />
+          </>
         ) : (
-          <OverviewSections overview={overview} />
+          <OverviewSections overview={overview} notice={notice} />
         )}
       </PendingRegion>
     </FilterTransition>
   );
 }
 
-function OverviewSections({ overview }: { overview: Overview }) {
+function OverviewSections({ overview, notice }: { overview: Overview; notice: React.ReactNode }) {
   const { filters, asOf } = overview;
   return (
     <>
-      <InsightBanner insight={overview.insight} />
+      <div className="flex flex-col gap-3">
+        <InsightBanner insight={overview.insight} />
+        {notice}
+      </div>
       <KpiStrip summary={overview} asOf={asOf} pipelineConflicts={overview.statusConflicts.count} />
 
       <div className="grid gap-4 xl:grid-cols-5">
         <SectionCard
           title="Monthly bookings vs target"
-          description="Units booked per month (by order date). All months shown; the selected range is highlighted."
+          description="Attainment = units booked ÷ target units, by order month. The axis follows bookings; targets far above it are labelled, not drawn. Selected range highlighted."
           help={METRIC_HELP.attainment}
           className="xl:col-span-3"
         >
@@ -144,7 +153,12 @@ function OverviewSections({ overview }: { overview: Overview }) {
       ) : (
         <SectionCard
           title="Branch comparison"
-          description={`${formatRange(filters.range)} · select a branch for its full page`}
+          description={
+            <>
+              {formatRange(filters.range)} · select a branch for its full page. Health uses win rate, bookings trend and
+              delivery time, not targets (<DataNotesLink>why: Data notes</DataNotesLink>).
+            </>
+          }
           help={METRIC_HELP.health}
           contentClassName="px-0"
         >

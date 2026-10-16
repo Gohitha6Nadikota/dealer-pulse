@@ -1,4 +1,4 @@
-import { ArrowRightIcon, ClockAlertIcon, HandshakeIcon, PhoneCallIcon, TruckIcon } from "lucide-react";
+import { ArrowRightIcon, ClockAlertIcon, DatabaseIcon, HandshakeIcon, PhoneCallIcon, TruckIcon } from "lucide-react";
 import Link from "next/link";
 import { InfoTip } from "@/components/dashboard/info-tip";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { formatDate, formatINR, formatNumber } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
 
 type ListSpec = {
-  key: "stale" | "stuck" | "negotiations";
+  key: "stale" | "stuck" | "staleOrders" | "negotiations";
   title: string;
   help: string;
   icon: typeof PhoneCallIcon;
@@ -16,6 +16,8 @@ type ListSpec = {
   verb: string;
   days: (n: number) => string;
   empty: string;
+  /** Value shown but excluded from the at-risk total. */
+  notAtRisk?: boolean;
 };
 
 const LISTS: ListSpec[] = [
@@ -30,12 +32,22 @@ const LISTS: ListSpec[] = [
   },
   {
     key: "stuck",
-    title: `Orders waiting ${THRESHOLDS.stuckOrderDays}+ days`,
+    title: "Delayed deliveries",
     help: METRIC_HELP.stuckOrders,
     icon: TruckIcon,
     verb: "Chase delivery",
     days: (n) => `${n}d since order`,
-    empty: "No orders are overdue for delivery.",
+    empty: `No orders delayed ${THRESHOLDS.stuckOrderDays}–${THRESHOLDS.staleOrderDays} days.`,
+  },
+  {
+    key: "staleOrders",
+    title: "Likely stale records",
+    help: METRIC_HELP.staleOrders,
+    icon: DatabaseIcon,
+    verb: "Verify status in CRM",
+    days: (n) => `${n}d since order`,
+    empty: `No orders open ${THRESHOLDS.staleOrderDays}+ days.`,
+    notAtRisk: true,
   },
   {
     key: "negotiations",
@@ -50,7 +62,6 @@ const LISTS: ListSpec[] = [
 
 /** "Needs attention": each item says who should do what, today. */
 export function AttentionCard({ attention, asOf, href }: { attention: Attention; asOf: string; href: string }) {
-  const totalValue = attention.stale.value + attention.stuck.value + attention.negotiations.value;
   return (
     <Card className="gap-4">
       <CardHeader>
@@ -59,7 +70,8 @@ export function AttentionCard({ attention, asOf, href }: { attention: Attention;
           Needs attention
         </CardTitle>
         <CardDescription>
-          As of {formatDate(asOf)} (UTC) · {formatINR(totalValue)} in deals waiting on action. Not affected by the date filter.
+          As of {formatDate(asOf)} (UTC) · {formatINR(attention.valueAtRisk)} at risk in idle leads, delayed deliveries and
+          stalled negotiations, each lead counted once. Not affected by the date filter.
         </CardDescription>
         <CardAction>
           <Link href={href} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
@@ -67,7 +79,7 @@ export function AttentionCard({ attention, asOf, href }: { attention: Attention;
           </Link>
         </CardAction>
       </CardHeader>
-      <CardContent className="grid gap-5 md:grid-cols-3 md:gap-0 md:divide-x">
+      <CardContent className="grid gap-5 md:grid-cols-2 xl:grid-cols-4 xl:gap-0 xl:divide-x">
         {LISTS.map((spec) => (
           <AttentionColumn key={spec.key} spec={spec} list={attention[spec.key]} />
         ))}
@@ -91,7 +103,7 @@ export function AttentionCard({ attention, asOf, href }: { attention: Attention;
 function AttentionColumn({ spec, list }: { spec: ListSpec; list: AttentionList }) {
   const Icon = spec.icon;
   return (
-    <section aria-label={spec.title} className="flex flex-col gap-3 md:px-5 md:first:pl-0 md:last:pr-0">
+    <section aria-label={spec.title} className="flex min-w-0 flex-col gap-3 xl:px-5 xl:first:pl-0 xl:last:pr-0">
       <div>
         <h3 className="flex items-center gap-1.5 text-sm font-medium">
           <Icon className="size-4 text-muted-foreground" aria-hidden />
@@ -104,6 +116,9 @@ function AttentionColumn({ spec, list }: { spec: ListSpec; list: AttentionList }
             <span className="ml-2 text-sm font-normal text-muted-foreground">{formatINR(list.value)}</span>
           )}
         </p>
+        {spec.notAtRisk && list.count > 0 && (
+          <p className="text-xs text-muted-foreground">Not counted as at risk</p>
+        )}
       </div>
       {list.count === 0 ? (
         <p className="text-sm text-muted-foreground">{spec.empty}</p>

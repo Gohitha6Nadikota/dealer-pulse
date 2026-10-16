@@ -34,16 +34,32 @@ export function staleLeads(
 export type StuckOrder = { lead: Lead; daysWaiting: number };
 
 /**
- * Orders placed but not delivered for more than `thresholdDays`, longest first.
- * The dataset only has delay_reason for orders that were eventually delivered,
- * so undelivered orders carry no reason; see `delayReasons` for the pattern.
+ * Genuine delivery delays: orders placed more than `thresholdDays` ago and not
+ * delivered, but younger than `staleAfterDays`. Longest first. The dataset only
+ * has delay_reason for delivered orders, so these carry no reason; see `delayReasons`.
  */
 export function stuckOrders(
   leads: Lead[],
   thresholdDays: number = THRESHOLDS.stuckOrderDays,
+  staleAfterDays: number = THRESHOLDS.staleOrderDays,
 ): StuckOrder[] {
   return leads
-    .filter((l) => l.status === "order_placed" && l.daysInStage > thresholdDays)
+    .filter((l) => l.status === "order_placed" && l.daysInStage > thresholdDays && l.daysInStage < staleAfterDays)
+    .map((lead) => ({ lead, daysWaiting: lead.daysInStage }))
+    .sort((a, b) => b.daysWaiting - a.daysWaiting || a.lead.id.localeCompare(b.lead.id));
+}
+
+/**
+ * Likely stale records: orders undelivered for `staleAfterDays` or more, far
+ * beyond any delivery time in the data. They need the CRM status verified,
+ * and are kept out of delay counts and revenue at risk. Longest first.
+ */
+export function staleOrderRecords(
+  leads: Lead[],
+  staleAfterDays: number = THRESHOLDS.staleOrderDays,
+): StuckOrder[] {
+  return leads
+    .filter((l) => l.status === "order_placed" && l.daysInStage >= staleAfterDays)
     .map((lead) => ({ lead, daysWaiting: lead.daysInStage }))
     .sort((a, b) => b.daysWaiting - a.daysWaiting || a.lead.id.localeCompare(b.lead.id));
 }

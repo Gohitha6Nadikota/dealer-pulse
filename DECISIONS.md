@@ -60,7 +60,7 @@ Supporting pages:
 | 3 | **42 of 274 loss notes contradict `lost_reason`** (e.g. note "went with Tata Harrier", reason "Financing not approved"). | Loss analysis uses the structured `lost_reason`. The count is disclosed on the funnel page. |
 | 4 | **55 notes contain a literal `{}`** ("Customer comparing with {} competitor"). | Sanitised for display to "comparing with a competitor"; the raw count is kept. |
 | 5 | **Delivery times rose sharply.** Mean days to deliver by order month: Jun 13.5, Jul 13.9, Aug 14.2, Sep 15.0, **Oct 20.1, Nov 28.9**, Dec 13.3. 55 of the 72 recorded delay reasons fall on Oct–Nov orders. | Shown on the KPI strip and trend tooltip. **December is right-censored:** only 22 of its 36 orders are delivered, so its average is biased low. The tooltip shows the completeness ("61% delivered so far"). |
-| 6 | **38 orders are awaiting delivery; 25 have waited more than 21 days, the longest 195 days** (placed in June). | These are the Action Center's "Delayed delivery" items. The data only records `delay_reason` for delivered orders, so the undelivered ones have none. |
+| 6 | **38 orders are awaiting delivery; 25 have waited more than 21 days.** 14 have waited 21–90 days; **11 have waited 90+ days, the longest 195** (placed in June), while the slowest delivery ever recorded took 39 days. | The 14 are genuine **delayed deliveries** (owner: branch manager, "Chase delivery"). The 11 are **likely stale records**, more plausibly cancelled or delivered-but-not-logged than late (owner: sales officer, "Verify status in CRM"). Only the 14 count in headlines and revenue at risk. The 90-day cut-off is `THRESHOLDS.staleOrderDays`. The data only records `delay_reason` for delivered orders, so neither group has one. |
 | 7 | Branch managers own no leads. | They have no officer page (their IDs 404); they own delivery chasing in the Action Center. |
 
 ---
@@ -75,7 +75,7 @@ All rules live in `lib/analytics/definitions.ts`; tooltips in `lib/metric-help.t
 | **Current status** | Status of the last history entry. |
 | **Booked sale (primary KPI)** | A lead with an `order_placed` entry, counted in the month of that entry. Delivered is secondary because delivery lags 1–5 weeks and would penalise recent months. |
 | **Booked revenue** | Sum of `deal_value` for booked leads. |
-| **Win rate** | Bookings ÷ (bookings + losses), each counted in the month the event happened. |
+| **Win rate** | Bookings ÷ (bookings + losses), each counted in the month the event happened. It counts deals won or lost *during* the period; the funnel counts leads *created* in the period, so the two can differ. The tooltip says so. |
 | **Target attainment** | Booked ÷ target for the same branch and months. `null` (shown "—"), not 0%, when there is no target (reps have none). |
 | **Open pipeline** | Current status `new`, `contacted`, `test_drive` or `negotiation`. |
 | **Awaiting delivery** | Current status `order_placed`; a separate bucket, not pipeline. |
@@ -84,6 +84,10 @@ All rules live in `lib/analytics/definitions.ts`; tooltips in `lib/metric-help.t
 | **Days in stage** | AS_OF − timestamp of the last history entry. |
 | **Funnel cohort** | Leads created in the selected months, with the furthest stage each reached. |
 | **Stage conversion** | Reached stage N+1 ÷ reached stage N. |
+
+### Monthly bookings chart
+
+Opens on **attainment %** (units booked ÷ target units, by order month) when the scope has targets; officers have none, so their chart opens on units. Units and Revenue stay one click away. Targets run about 7× actual volume, so on a shared axis they flatten the bars. The y-axis is therefore capped near 1.5× the largest bar, rounded to a round number with even ticks (`lib/analytics/trend-scale.ts`). A target above the cap is not drawn; the legend labels it "Target off-scale" with its value (100% for attainment, 181–240 units a month for the company). A target that fits under the cap is drawn as usual.
 
 ### Period metrics vs snapshots
 
@@ -203,28 +207,31 @@ No other branch differs from the company beyond chance at any stage. Most office
 
 | Reason | Condition (as of AS_OF) | Owner | Next step |
 |---|---|---|---|
-| Delayed delivery | `order_placed`, not delivered, > 21 days | Branch manager | Chase delivery and update the customer |
+| Delayed delivery | `order_placed`, not delivered, more than 21 and under 90 days | Branch manager | Chase delivery and update the customer |
+| Likely stale record | `order_placed`, not delivered, 90+ days | Sales officer | Verify the order's status in the CRM |
 | Stalled negotiation | In negotiation ≥ 10 days | Sales officer | Push to a decision |
 | Idle lead | Open, no activity ≥ 7 days | Sales officer | Follow up |
 | Past expected close | Open, `expected_close_date` before AS_OF | Sales officer | Re-confirm timing |
 | Status conflict | Stored "lost" with no loss event | Sales officer | Correct the CRM status |
 
-- **Thresholds** (7 / 10 / 21 days) are constants in `THRESHOLDS` (`lib/analytics/definitions.ts`), as the brief specified.
+- **Thresholds** (7 / 10 / 21 days, and 90 for likely stale records) are constants in `THRESHOLDS` (`lib/analytics/definitions.ts`). 90 is deliberately conservative: no recorded delivery took more than 39 days.
 - **Severity is my convention**, documented in the UI tooltip:
-  - "Act now" at **twice** a threshold (idle 14+, negotiation 20+, waiting 42+).
+  - "Act now" at **twice** a threshold (idle 14+, negotiation 20+, waiting 42–89).
   - "Watch" at the threshold, or past the expected close date.
-  - "Review" when a status conflict is the only reason.
+  - "Review" for records to verify: likely stale orders (90+ days), or a status conflict as the only reason.
   - A lead takes its worst reason's severity.
 - **Ordering** is severity, then deal value × days.
 - **Person filter:** filtering by a person shows items they own *or* leads assigned to them, so an officer also sees the delayed orders on their own customers.
 
-**Current state:** 45 leads (22 Act now, 12 Watch, 11 Review); 25 delayed deliveries, 9 idle leads, 2 stalled negotiations, 2 past their expected close, 14 status conflicts.
+**Value at risk** counts each lead once and excludes "Review" items, because a record to verify isn't revenue slipping. The Action Center total and the Overview's "Needs attention" total use the same definition and agree (₹6.3 Cr); a test enforces it. The Action Center also shows the excluded amount ("excl. ₹4.1 Cr in records to verify"). An earlier version of the "Needs attention" total added its lists together, which counted a negotiation that was also idle twice. That is fixed.
+
+**Current state:** 45 leads (11 Act now, 12 Watch, 22 Review); 14 delayed deliveries, 11 likely stale records, 9 idle leads, 2 stalled negotiations, 2 past their expected close, 14 status conflicts.
 
 ---
 
 ## 9. Branch health badge
 
-Targets can't drive health (every branch would be red), so health compares each branch with **the company** and with **its own previous period**:
+Targets can't drive health (every branch would be red), so health compares each branch with **the company** and with **its own previous period**. It uses three inputs: win rate vs the company average, bookings vs the branch's own previous period, and delivery time vs the company average. It does **not** use target attainment, because targets look unreachable relative to the data. The badge tooltip (every badge, healthy ones included) and the branch comparison say this, with a link that opens Data notes.
 
 - **Act now (red):** win rate under 75% of the company's, or bookings down more than 25% vs the previous period.
 - **Watch (amber):** win rate under 90% of the company's, bookings down more than 10%, or average delivery time over 125% of the company's.
@@ -256,7 +263,7 @@ The win-rate rules need at least 5 outcomes. Comparison rules are skipped when t
 - **Client components** are limited to the filter bars, the chart, the lead and action tables (search, sort, timeline drawer) and navigation. They receive trimmed rows (no phone numbers, notes already sanitised).
 - **Real 404s:** detail pages are prerendered via `generateStaticParams`, but with streaming a `notFound()` inside the page would return HTTP 200. `proxy.ts` checks branch and officer IDs against the dataset before rendering and rewrites unknown ones to the not-found page, giving a true 404.
 - **UI:** Tailwind v4 and shadcn/ui (Radix), Recharts for the trend chart, one accent colour (blue), and status colours (green, amber, red) reserved for health and severity, always with an icon and a label.
-- **Tests:** Vitest, 208 tests across 21 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
+- **Tests:** Vitest, 232 tests across 24 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
 
 ### UTC handling
 
@@ -267,7 +274,7 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 ## 12. Interesting patterns in the data
 
 1. **Lakeside Toyota is the outlier on everything.** 10 bookings against a 264-unit target (3.8% vs 15–19% elsewhere); loses 39% of leads before first contact; 14% win rate vs 42% company-wide; and every one of its open leads has a broken CRM status.
-2. **Delivery is the company-wide operational story.** Order-to-delivery time rose to 20.1 days for October orders and 28.9 for November, against ~14 for Jun–Sep, and 25 orders are stuck over 21 days, some since June. Orders with a recorded delay reason averaged 25.2 days vs 12.7 without.
+2. **Delivery is the company-wide operational story.** Order-to-delivery time rose to 20.1 days for October orders and 28.9 for November, against ~14 for Jun–Sep, and 14 orders are delayed 21–90 days. A further 11 have been open 90+ days (since as early as June), which looks like stale CRM records rather than delays. Orders with a recorded delay reason averaged 25.2 days vs 12.7 without.
 3. **Demand grew in Q4.** Leads created rose from 55–70 a month (Jun–Sep) to 90–95 (Oct–Nov); bookings Oct–Dec were 59% above Jul–Sep (118 vs 74).
 4. **Losses are spread across reasons**, with no single dominant cause ("Better offer elsewhere" and "Not ready to purchase" lead at 40 each, 15%). Competitor-related reasons account for about a quarter of losses.
 5. **Late stages convert well.** Once in negotiation, 87% of resolved leads ordered; the leak is early in the funnel.
@@ -283,6 +290,7 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 - **Censoring:** recent months are biased in delivery time (low), funnel conversion and loss rates; disclosed where shown.
 - **Synthetic data:** patterns (e.g. "Customer requested date change" as the top delay reason) may not generalise.
 - **Severity tiers** (2× threshold) are a convention, not a business rule from the brief.
+- **The 90-day stale cut-off** is a heuristic from the data (slowest delivery 39 days), not a confirmed business rule. Orders between 40 and 89 days are still treated as genuine delays.
 - **Officers are benchmarked against the company**, not their branch.
 - **Tests** cover logic and view models; interactions were checked in headless Chrome, not with DOM component tests.
 - **`date-fns`** is installed as specified but unused; see UTC handling above.

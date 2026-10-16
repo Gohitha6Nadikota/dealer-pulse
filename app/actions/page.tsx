@@ -16,10 +16,11 @@ import { THRESHOLDS } from "@/lib/analytics/definitions";
 import { getDataset } from "@/lib/data";
 import { hrefWithFilters, parseFilters } from "@/lib/filters";
 import { formatDate, formatDays, formatINR, formatNumber } from "@/lib/format";
+import { METRIC_HELP } from "@/lib/metric-help";
 
 export const metadata: Metadata = { title: "Action Center" };
 
-const SEVERITY_HELP = `Act now: at least twice a threshold (idle ${THRESHOLDS.staleLeadDays * 2}+ days, negotiation ${THRESHOLDS.stalledNegotiationDays * 2}+ days, order waiting ${THRESHOLDS.stuckOrderDays * 2}+ days). Watch: past a threshold, or past the expected close date. Review: CRM status conflict only.`;
+const SEVERITY_HELP = `Act now: at least twice a threshold (idle ${THRESHOLDS.staleLeadDays * 2}+ days, negotiation ${THRESHOLDS.stalledNegotiationDays * 2}+ days, order waiting ${THRESHOLDS.stuckOrderDays * 2}–${THRESHOLDS.staleOrderDays - 1} days). Watch: past a threshold, or past the expected close date. Review: records to verify in the CRM (orders open ${THRESHOLDS.staleOrderDays}+ days, or a status conflict).`;
 
 export default function ActionsPage({ searchParams }: PageProps<"/actions">) {
   return (
@@ -77,15 +78,16 @@ function ActionSections({ view }: { view: ActionCenterView }) {
           detail={`${formatNumber(summary.bySeverity.warning)} watch · ${formatNumber(summary.bySeverity.review)} review`}
         />
         <KpiCard
-          label="Deal value involved"
+          label="Deal value at risk"
           value={formatINR(summary.value)}
-          help="Sum of deal value for these leads, each counted once. Delayed orders are already booked; this is value at risk of slipping, not lost."
+          help={`Deal value of leads needing action now or soon, each counted once. Delayed orders are already booked; this is value at risk of slipping, not lost. Records to verify (orders open ${THRESHOLDS.staleOrderDays}+ days, status conflicts) are excluded.`}
+          detail={summary.verifyValue > 0 ? `excl. ${formatINR(summary.verifyValue)} in records to verify` : undefined}
         />
         <KpiCard
           label="Delayed deliveries"
           value={formatNumber(summary.byReason.delayed_order)}
-          help={`Orders placed more than ${THRESHOLDS.stuckOrderDays} days ago and not delivered. Owned by the branch manager.`}
-          detail={`${formatNumber(summary.byReason.status_conflict)} CRM status conflicts to fix`}
+          help={METRIC_HELP.stuckOrders}
+          detail={`${formatNumber(summary.byReason.stale_order)} likely stale records · ${formatNumber(summary.byReason.status_conflict)} status conflicts to verify`}
         />
       </div>
 

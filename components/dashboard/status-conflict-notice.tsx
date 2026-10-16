@@ -5,8 +5,9 @@ import type { StatusConflictNotice as Notice } from "@/lib/analytics/status-conf
 import { cn } from "@/lib/utils";
 
 /**
- * Compact data-quality warning for CRM status conflicts. Renders nothing when
- * there is no notice. Independent of the date filter by design.
+ * Compact data-quality strip for CRM status conflicts, placed under the
+ * headline insight. Renders nothing when there is no notice. Independent of
+ * the date filter by design.
  */
 export function StatusConflictNotice({
   notice,
@@ -24,25 +25,26 @@ export function StatusConflictNotice({
     <section
       aria-labelledby={titleId}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-warning/40 bg-warning-surface p-4 text-warning-foreground sm:flex-row sm:items-start",
+        "flex flex-col gap-1.5 rounded-lg border border-warning/40 bg-warning-surface px-3 py-2 text-sm text-warning-foreground sm:flex-row sm:items-center sm:gap-4",
         className,
       )}
     >
-      <TriangleAlertIcon className="size-5 shrink-0" aria-hidden />
-      <div className="min-w-0 flex-1 space-y-1">
-        <h2 id={titleId} className="text-sm font-semibold">
-          {notice.title}
-        </h2>
-        <p className="text-sm text-pretty">{notice.body}</p>
-        {notice.notes.map((note) => (
-          <p key={note} className="text-sm font-medium text-pretty">
-            {note}
-          </p>
-        ))}
+      <div className="flex min-w-0 flex-1 items-start gap-2">
+        <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+        <div className="min-w-0 text-pretty">
+          <span className="font-semibold">
+            <h2 id={titleId} className="inline text-sm font-semibold">
+              {notice.title}
+            </h2>
+            .
+          </span>{" "}
+          {notice.body}
+          {notice.notes.length > 0 && <span className="font-medium"> {notice.notes.join(" ")}</span>}
+        </div>
       </div>
       <Link
         href={href}
-        className="inline-flex shrink-0 items-center gap-1 self-start rounded-md border border-warning/50 bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+        className="inline-flex shrink-0 items-center gap-1 self-start rounded-sm pl-6 font-medium text-foreground underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-ring sm:self-center sm:pl-0"
       >
         Review affected leads
         <ArrowRightIcon className="size-3.5" aria-hidden />

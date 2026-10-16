@@ -36,7 +36,11 @@ export function BranchTable({
               Attainment <InfoTip label="Attainment">{METRIC_HELP.attainment}</InfoTip>
             </span>
           </TableHead>
-          <TableHead className="text-right">Win rate</TableHead>
+          <TableHead className="text-right">
+            <span className="inline-flex items-center gap-1">
+              Win rate <InfoTip label="Win rate">{METRIC_HELP.winRate}</InfoTip>
+            </span>
+          </TableHead>
           <TableHead className="text-right">Avg delivery</TableHead>
           <TableHead className="text-right">Open pipeline</TableHead>
           <TableHead className="w-8">

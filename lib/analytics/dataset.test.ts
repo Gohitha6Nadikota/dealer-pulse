@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import rawJson from "@/public/data/dealership_data.json";
-import { stuckOrders, staleLeads } from "@/lib/analytics/actions";
+import { staleOrderRecords, stuckOrders, staleLeads } from "@/lib/analytics/actions";
 import { buildDataset } from "@/lib/analytics/enrich";
 import { funnel } from "@/lib/analytics/funnel";
 import { kpis } from "@/lib/analytics/kpis";
@@ -49,8 +49,12 @@ describe("real dataset", () => {
     expect(k.losses).toBe(274);
     expect(k.openPipelineCount).toBe(38);
     expect(k.awaitingDeliveryCount).toBe(38);
-    // Audit: 25 of the 38 awaiting orders are older than 21 days; 9 open leads idle ≥ 7 days.
-    expect(stuckOrders(ds.leads)).toHaveLength(25);
+    // Audit: 25 of the 38 awaiting orders are older than 21 days: 14 genuine delays (21–90 days)
+    // and 11 likely stale records (90+ days, up to 195). 9 open leads idle ≥ 7 days.
+    expect(stuckOrders(ds.leads)).toHaveLength(14);
+    expect(staleOrderRecords(ds.leads)).toHaveLength(11);
+    expect(staleOrderRecords(ds.leads)[0].daysWaiting).toBe(195);
+    expect(Math.max(...ds.deliveries.map((d) => d.days_to_deliver))).toBe(39);
     expect(staleLeads(ds.leads)).toHaveLength(9);
   });
 

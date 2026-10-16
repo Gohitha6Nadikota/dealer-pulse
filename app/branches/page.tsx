@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { DataNotesLink } from "@/components/app-shell/data-notes-link";
 import { BranchTable } from "@/components/dashboard/branch-table";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { PageSkeleton } from "@/components/dashboard/page-skeleton";
@@ -46,7 +47,12 @@ async function BranchesContent({ searchParams }: Pick<PageProps<"/branches">, "s
       <PendingRegion>
         <SectionCard
           title="Branch comparison"
-          description="Highest booked revenue first. Select a branch for its team, funnel and open leads."
+          description={
+            <>
+              Highest booked revenue first. Select a branch for its team, funnel and open leads. Health uses win rate,
+              bookings trend and delivery time, not targets (<DataNotesLink>why: Data notes</DataNotesLink>).
+            </>
+          }
           help={METRIC_HELP.health}
           contentClassName="px-0"
         >

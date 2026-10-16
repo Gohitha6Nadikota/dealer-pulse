@@ -1,4 +1,5 @@
 import { KpiCard, KpiGroup } from "@/components/dashboard/kpi-card";
+import { THRESHOLDS } from "@/lib/analytics/definitions";
 import type { ScopeSummary } from "@/lib/analytics/scope";
 import { formatDate, formatDays, formatINR, formatNumber, formatPercent, formatRange, formatRangeCompact } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
@@ -83,7 +84,11 @@ export function KpiStrip({
             label="Awaiting delivery"
             value={formatNumber(k.awaitingDeliveryCount)}
             help={METRIC_HELP.awaitingDelivery}
-            detail={`${formatINR(k.awaitingDeliveryValue)} booked, not delivered`}
+            detail={
+              summary.attention.staleOrders.count > 0
+                ? `${formatINR(k.awaitingDeliveryValue)} booked, not delivered; ${formatNumber(summary.attention.staleOrders.count)} open ${THRESHOLDS.staleOrderDays}+ days look stale`
+                : `${formatINR(k.awaitingDeliveryValue)} booked, not delivered`
+            }
           />
         </div>
       </KpiGroup>

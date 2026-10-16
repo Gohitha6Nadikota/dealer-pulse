@@ -1,5 +1,5 @@
 import { AlertTriangleIcon, CheckCircle2Icon, EyeIcon } from "lucide-react";
-import { HEALTH_LABELS, type Health } from "@/lib/analytics/health";
+import { HEALTH_BASIS, HEALTH_LABELS, type Health } from "@/lib/analytics/health";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -26,23 +26,28 @@ export function HealthBadge({ health, className }: { health: Health; className?:
   );
 }
 
-/** Health badge that reveals its reasons on hover or focus. */
+/** Health badge that explains itself on hover or focus: its reasons, and what health is based on. */
 export function HealthBadgeWithReasons({ health }: { health: Health }) {
-  if (!health.reasons.length) return <HealthBadge health={health} />;
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button type="button" className="rounded-full focus-visible:outline-2 focus-visible:outline-ring">
           <HealthBadge health={health} />
-          <span className="sr-only">: {health.reasons.join("; ")}</span>
+          <span className="sr-only">
+            {health.reasons.length ? `: ${health.reasons.join("; ")}. ` : ". "}
+            {HEALTH_BASIS}
+          </span>
         </button>
       </TooltipTrigger>
-      <TooltipContent>
-        <ul className="space-y-0.5">
-          {health.reasons.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
+      <TooltipContent className="max-w-72 text-pretty">
+        {health.reasons.length > 0 && (
+          <ul className="mb-1.5 space-y-0.5 font-medium">
+            {health.reasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        )}
+        <p className="leading-relaxed">{HEALTH_BASIS}</p>
       </TooltipContent>
     </Tooltip>
   );

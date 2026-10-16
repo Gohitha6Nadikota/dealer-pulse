@@ -82,13 +82,15 @@ async function RepContent({ id, searchParams }: { id: string } & Pick<PageProps<
       >
         <FilterBar path={`/reps/${rep.id}`} filters={filters} months={ds.months} />
       </PageHeader>
-      <StatusConflictNotice
-        notice={statusConflictNotice(view.statusConflicts, rep.name)}
-        href={actionsHref(filters, { reason: "status_conflict", ownerId: rep.id })}
-      />
 
       <PendingRegion className="flex flex-col gap-6">
-        <InsightBanner insight={view.insight} />
+        <div className="flex flex-col gap-3">
+          <InsightBanner insight={view.insight} />
+          <StatusConflictNotice
+            notice={statusConflictNotice(view.statusConflicts, rep.name)}
+            href={actionsHref(filters, { reason: "status_conflict", ownerId: rep.id })}
+          />
+        </div>
         <KpiStrip
           summary={view}
           asOf={asOf}

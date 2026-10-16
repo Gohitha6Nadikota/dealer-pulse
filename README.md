@@ -95,7 +95,7 @@ Then open http://localhost:3000.
 | `npm start` | Serve the production build |
 | `npm run audit` | Data audit: shape, AS_OF, targets vs actuals, status/history conflicts, note contradictions, template bugs, delivery censoring, integrity |
 | `npm run typecheck` | `tsc --noEmit` (strict) |
-| `npm test` | Vitest, once (208 tests) |
+| `npm test` | Vitest, once (232 tests) |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run lint` | ESLint (Next core-web-vitals and TypeScript rules) |
 
@@ -111,7 +111,8 @@ The data is synthetic: 5 branches, 30 people (5 managers who own no leads, 25 sa
 
 - **Booked sale** = a lead with an `order_placed` history entry, counted in that month. Delivered is secondary.
 - **Status comes from the last history entry.** 14 leads stored as "lost" without a loss event are treated as open and flagged as status conflicts.
-- **Win rate** = bookings ÷ (bookings + losses) in the selected months.
+- **Win rate** = bookings ÷ (bookings + losses) in the selected months: deals won or lost *during* the period, while the funnel counts leads *created* in it.
+- **Delayed deliveries vs likely stale records:** undelivered orders 21–90 days old are delays (branch manager chases them); 90+ days old are likely stale CRM records to verify (sales officer). Only delays count as revenue at risk.
 - **Period vs snapshot:** the date filter changes bookings, revenue, win rate, delivery time and the funnel. Open pipeline, awaiting delivery, action items and the outlook are snapshots as of AS_OF and say so.
 - **Targets run ~7× actual volume** (1,426 target units vs 198 booked), so attainment is shown but health is judged against the company and the branch's own past.
 - **Leaks** need at least 20 leads at a stage and a significant gap (z ≥ 2) vs the company.
@@ -124,7 +125,7 @@ The data is synthetic: 5 branches, 30 people (5 managers who own no leads, 25 sa
 npm test
 ```
 
-208 tests across 21 files cover:
+232 tests across 24 files cover:
 
 - validation and enrichment
 - every metric, the filters and URL round-trips, and formatting

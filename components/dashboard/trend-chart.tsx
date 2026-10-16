@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Bar, CartesianGrid, Cell, ComposedChart, Line, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, CartesianGrid, Cell, ComposedChart, Line, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { TrendPoint } from "@/lib/analytics/trend";
+import { defaultTrendMetric, trendScale, type TrendMetric } from "@/lib/analytics/trend-scale";
 import {
   EMPTY,
   formatChange,
@@ -18,7 +19,6 @@ import {
 } from "@/lib/format";
 
 type Point = TrendPoint & { inRange: boolean };
-type Metric = "units" | "revenue";
 const ACTIVE = "px-3 data-[state=on]:bg-sidebar-accent data-[state=on]:text-sidebar-accent-foreground";
 
 const config = {
@@ -26,17 +26,35 @@ const config = {
   target: { label: "Target", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
-const SERIES: Record<Metric, { booked: keyof Point; target: keyof Point; format: (n: number) => string }> = {
-  units: { booked: "bookedUnits", target: "targetUnits", format: (n) => formatNumber(n) },
-  revenue: { booked: "bookedRevenue", target: "targetRevenue", format: (n) => formatINR(n) },
+const SERIES: Record<
+  TrendMetric,
+  { booked: keyof Point; target: keyof Point | null; format: (n: number) => string; label: string }
+> = {
+  attainment: { booked: "unitAttainment", target: null, format: (n) => formatPercent(n), label: "Attainment" },
+  units: { booked: "bookedUnits", target: "targetUnits", format: (n) => formatNumber(n), label: "Booked units" },
+  revenue: { booked: "bookedRevenue", target: "targetRevenue", format: (n) => formatINR(n), label: "Booked revenue" },
 };
 
-/** Monthly bookings as columns with the target as a line, on one shared axis. */
+function rangeText(min: number, max: number, format: (n: number) => string): string {
+  return min === max ? format(min) : `${format(min)}–${format(max)}`;
+}
+
+/**
+ * Monthly bookings. Opens on attainment (booked ÷ target units) when the scope
+ * has targets. The y-axis is capped near 1.5× the largest bar so the target,
+ * which runs far above actual volume, never flattens the bars; an off-scale
+ * target is labelled with its value instead of drawn.
+ */
 export function TrendChart({ data }: { data: Point[] }) {
-  const [metric, setMetric] = useState<Metric>("units");
+  const [metric, setMetric] = useState<TrendMetric>(() => defaultTrendMetric(data));
   const [showTarget, setShowTarget] = useState(true);
   const series = SERIES[metric];
-  const hasTarget = data.some((p) => p[series.target] !== null);
+  const scale = trendScale(data, metric);
+  const target = scale.target;
+  const hasAttainment = data.some((p) => p.unitAttainment !== null);
+  const drawTarget = target !== null && !target.offScale && showTarget;
+  // One decimal on the percent axis only when a tick needs it (e.g. 2.5%).
+  const pctDigits = scale.ticks.some((t) => Math.round(t * 1000) % 10 !== 0) ? 1 : 0;
   const someOutOfRange = data.some((p) => !p.inRange);
 
   return (
@@ -45,9 +63,16 @@ export function TrendChart({ data }: { data: Point[] }) {
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Legend">
           <li className="flex items-center gap-1.5">
             <span aria-hidden className="size-2.5 rounded-[3px] bg-chart-1" />
-            Booked
+            {series.label}
           </li>
-          {hasTarget && showTarget && (
+          {target && target.offScale && (
+            <li className="flex items-center gap-1.5 font-medium text-foreground">
+              <span aria-hidden className="h-0.5 w-3.5 rounded-full border-t-2 border-dashed border-chart-2" />
+              Target off-scale: {rangeText(target.min, target.max, series.format)}
+              {metric !== "attainment" && " per month"}
+            </li>
+          )}
+          {drawTarget && (
             <li className="flex items-center gap-1.5">
               <span aria-hidden className="h-0.5 w-3.5 rounded-full bg-chart-2" />
               Target
@@ -61,7 +86,7 @@ export function TrendChart({ data }: { data: Point[] }) {
           )}
         </ul>
         <div className="flex items-center gap-2">
-          {hasTarget && (
+          {target && !target.offScale && (
             <Toggle
               size="sm"
               variant="outline"
@@ -79,11 +104,20 @@ export function TrendChart({ data }: { data: Point[] }) {
             variant="outline"
             spacing={0}
             value={metric}
-            onValueChange={(v) => v && setMetric(v as Metric)}
+            onValueChange={(v) => v && setMetric(v as TrendMetric)}
             aria-label="Measure"
           >
-            <ToggleGroupItem value="units" className={ACTIVE}>Units</ToggleGroupItem>
-            <ToggleGroupItem value="revenue" className={ACTIVE}>Revenue</ToggleGroupItem>
+            {hasAttainment && (
+              <ToggleGroupItem value="attainment" className={ACTIVE}>
+                Attainment %
+              </ToggleGroupItem>
+            )}
+            <ToggleGroupItem value="units" className={ACTIVE}>
+              Units
+            </ToggleGroupItem>
+            <ToggleGroupItem value="revenue" className={ACTIVE}>
+              Revenue
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
       </div>
@@ -99,20 +133,26 @@ export function TrendChart({ data }: { data: Point[] }) {
             tickMargin={8}
           />
           <YAxis
-            allowDecimals={false}
-            tickFormatter={(v: number) => series.format(v)}
+            domain={[0, scale.max]}
+            ticks={scale.ticks}
+            allowDataOverflow
+            allowDecimals={metric === "attainment"}
+            tickFormatter={(v: number) => (metric === "attainment" ? formatPercent(v, pctDigits) : series.format(v))}
             tickLine={false}
             axisLine={false}
-            width={metric === "revenue" ? 64 : 36}
+            width={metric === "revenue" ? 64 : 44}
             className="tabular-nums"
           />
           <Tooltip cursor={{ fill: "var(--muted)" }} content={<TrendTooltip metric={metric} />} />
-          <Bar dataKey={series.booked} name="Booked" maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+          <Bar dataKey={series.booked} name={series.label} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((p) => (
               <Cell key={p.month} fill="var(--color-booked)" fillOpacity={p.inRange ? 1 : 0.35} />
             ))}
           </Bar>
-          {hasTarget && showTarget && (
+          {drawTarget && metric === "attainment" && (
+            <ReferenceLine y={1} stroke="var(--color-target)" strokeWidth={2} ifOverflow="hidden" />
+          )}
+          {drawTarget && series.target && (
             <Line
               dataKey={series.target}
               name="Target"
@@ -167,13 +207,13 @@ function TrendTooltip({
   active,
   payload,
 }: {
-  metric: Metric;
+  metric: TrendMetric;
   active?: boolean;
   payload?: { payload: Point }[];
 }) {
   const p = payload?.[0]?.payload;
   if (!active || !p) return null;
-  const units = metric === "units";
+  const units = metric !== "revenue";
   const booked = units ? formatNumber(p.bookedUnits) : formatINR(p.bookedRevenue);
   const target = units ? p.targetUnits : p.targetRevenue;
   const attainment = units ? p.unitAttainment : p.revenueAttainment;

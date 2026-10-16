@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { DataNotesLink } from "@/components/app-shell/data-notes-link";
 import { AttentionCard } from "@/components/dashboard/attention-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { FunnelChart } from "@/components/dashboard/funnel-chart";
@@ -68,7 +69,14 @@ async function BranchContent({
           { label: branch.name },
         ]}
         title={branch.name}
-        badge={<HealthBadgeWithReasons health={view.health} />}
+        badge={
+          <>
+            <HealthBadgeWithReasons health={view.health} />
+            <span className="text-xs text-muted-foreground">
+              Health ignores targets (<DataNotesLink>why</DataNotesLink>)
+            </span>
+          </>
+        }
         subtitle={
           <>
             {branch.city}
@@ -79,19 +87,21 @@ async function BranchContent({
       >
         <FilterBar path={`/branches/${branch.id}`} filters={filters} months={ds.months} />
       </PageHeader>
-      <StatusConflictNotice
-        notice={statusConflictNotice(view.statusConflicts, branch.name)}
-        href={actionsHref({ ...filters, branchId: branch.id }, { reason: "status_conflict" })}
-      />
 
       <PendingRegion className="flex flex-col gap-6">
-        <InsightBanner insight={view.insight} />
+        <div className="flex flex-col gap-3">
+          <InsightBanner insight={view.insight} />
+          <StatusConflictNotice
+            notice={statusConflictNotice(view.statusConflicts, branch.name)}
+            href={actionsHref({ ...filters, branchId: branch.id }, { reason: "status_conflict" })}
+          />
+        </div>
         <KpiStrip summary={view} asOf={asOf} pipelineConflicts={view.statusConflicts.count} />
 
         <div className="grid gap-4 xl:grid-cols-5">
           <SectionCard
             title="Monthly bookings vs branch target"
-            description="Units booked per month (by order date). The selected range is highlighted."
+            description="Attainment = units booked ÷ target units, by order month. The axis follows bookings; targets far above it are labelled, not drawn. Selected range highlighted."
             help={METRIC_HELP.attainment}
             className="xl:col-span-3"
           >

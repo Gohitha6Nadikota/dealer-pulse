@@ -41,7 +41,8 @@ export type InsightInput = {
 export const MIN_BASE_FOR_PERCENT = 10;
 
 function plural(n: number, word: string): string {
-  return `${formatNumber(n)} ${word}${n === 1 ? "" : "s"}`;
+  if (n === 1) return `${formatNumber(n)} ${word}`;
+  return `${formatNumber(n)} ${word.endsWith("y") ? `${word.slice(0, -1)}ies` : `${word}s`}`;
 }
 
 function bookingsClause(input: InsightInput): { text: string; change: number | null } {
@@ -92,7 +93,7 @@ export function overviewInsight(input: InsightInput): Insight {
   const supporting: string[] = [];
   if (input.stuckOrders > 0) {
     supporting.push(
-      `${plural(input.stuckOrders, "order")} waiting more than ${THRESHOLDS.stuckOrderDays} days for delivery.`,
+      `${plural(input.stuckOrders, "delivery")} delayed: ordered ${THRESHOLDS.stuckOrderDays}–${THRESHOLDS.staleOrderDays} days ago, not yet delivered.`,
     );
   }
   const { current, previous } = input;

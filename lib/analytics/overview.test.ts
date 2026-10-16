@@ -30,7 +30,7 @@ describe("buildOverview (real data, default filters)", () => {
     expect(o.insight.headline).toBe(
       "Bookings are up 59% on Jul – Sep 2025 (118 vs 74 cars); Lakeside Toyota needs attention (win rate 14% vs 46% company).",
     );
-    expect(o.insight.supporting[0]).toBe("25 orders waiting more than 21 days for delivery.");
+    expect(o.insight.supporting[0]).toBe("14 deliveries delayed: ordered 21–90 days ago, not yet delivered.");
   });
 
   it("ranks branches by revenue with Lakeside flagged", () => {
@@ -47,7 +47,9 @@ describe("buildOverview (real data, default filters)", () => {
   });
 
   it("assigns action items to an owner", () => {
-    expect(o.attention.stuck.count).toBe(25);
+    expect(o.attention.stuck.count).toBe(14);
+    expect(o.attention.staleOrders.count).toBe(11);
+    expect(o.attention.staleOrders.top[0].owner?.role).toBe("sales_officer");
     expect(o.attention.stuck.top[0].owner?.role).toBe("branch_manager");
     expect(o.attention.stale.top[0].owner?.role).toBe("sales_officer");
     expect(o.attention.stale.top.length).toBeLessThanOrEqual(3);

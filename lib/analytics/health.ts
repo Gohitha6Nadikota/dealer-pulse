@@ -36,6 +36,10 @@ export const HEALTH_RULES = {
   minOutcomes: 5,
 } as const;
 
+/** What health is (and isn't) based on, for tooltips. */
+export const HEALTH_BASIS =
+  "Health is based on win rate vs the company average, bookings vs the branch's own previous period, and delivery time vs the company average. It does not use target attainment: targets look unreachable relative to the data.";
+
 export const HEALTH_LABELS: Record<HealthLevel, string> = {
   healthy: "Healthy",
   watch: "Watch",

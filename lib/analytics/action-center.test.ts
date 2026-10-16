@@ -61,7 +61,14 @@ describe("summarizeActions", () => {
   it("counts leads once but reasons per lead", () => {
     expect(s.total).toBe(4);
     expect(s.value).toBe(4_000_000 + 2_000_000 + 1_000_000 + 1_000_000);
-    expect(s.byReason).toEqual({ delayed_order: 1, stalled_negotiation: 1, idle_lead: 3, past_close_date: 0, status_conflict: 1 });
+    expect(s.byReason).toEqual({
+      delayed_order: 1,
+      stale_order: 0,
+      stalled_negotiation: 1,
+      idle_lead: 3,
+      past_close_date: 0,
+      status_conflict: 1,
+    });
     expect(s.bySeverity).toEqual({ critical: 3, warning: 1, review: 0 });
   });
   it("groups by owner and branch, most critical first", () => {

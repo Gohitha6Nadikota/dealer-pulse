@@ -1,4 +1,6 @@
 /** Plain-language data caveats for the "Data notes" popover, from audited numbers. */
+import { staleOrderRecords } from "@/lib/analytics/actions";
+import { THRESHOLDS } from "@/lib/analytics/definitions";
 import { kpis, ratio } from "@/lib/analytics/kpis";
 import { formatDate } from "@/lib/format";
 import type { Dataset } from "@/lib/types";
@@ -35,6 +37,14 @@ export function dataNotes(ds: Dataset): DataNote[] {
     notes.push({
       title: `${q.templatedNotes} notes had a template bug`,
       detail: "“comparing with {} competitor” is shown as “comparing with a competitor”.",
+    });
+  }
+  const stale = staleOrderRecords(ds.leads);
+  if (stale.length) {
+    const slowest = Math.max(...ds.deliveries.map((d) => d.days_to_deliver));
+    notes.push({
+      title: `${stale.length} orders look like stale records`,
+      detail: `They have been open ${THRESHOLDS.staleOrderDays}+ days (up to ${Math.max(...stale.map((s) => s.daysWaiting))}), while the slowest recorded delivery took ${slowest} days. They are listed for CRM verification and kept out of delay counts and revenue at risk.`,
     });
   }
   const istDate = formatDate(new Date(Date.parse(ds.asOf) + IST_OFFSET_MS).toISOString());

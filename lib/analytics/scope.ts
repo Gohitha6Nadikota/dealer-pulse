@@ -8,6 +8,7 @@ import {
   delayReasons,
   stalledNegotiations,
   staleLeads,
+  staleOrderRecords,
   stuckOrders,
   type DelayReason,
 } from "@/lib/analytics/actions";
@@ -51,9 +52,17 @@ export type AttentionList = {
 
 export type Attention = {
   stale: AttentionList;
+  /** Genuine delivery delays (21–90 days); owned by the branch manager. */
   stuck: AttentionList;
+  /** Orders open 90+ days: likely stale CRM records; owned by the sales officer. Not revenue at risk. */
+  staleOrders: AttentionList;
   negotiations: AttentionList;
   delayReasons: DelayReason[];
+  /**
+   * INR at risk: deal value of every lead that is idle, delayed or in a stalled
+   * negotiation, each lead counted once. Likely stale records are excluded.
+   */
+  valueAtRisk: number;
 };
 
 export type KpiDeltas = {
@@ -137,14 +146,17 @@ export function attentionFor(ds: Dataset, leads: Lead[]): Attention {
   );
   const manager = (lead: Lead) => managers.get(lead.branchId) ?? null;
   const rep = (lead: Lead) => lead.rep;
+  const idle = staleLeads(leads).map((s) => ({ lead: s.lead, days: s.daysIdle }));
+  const delayed = stuckOrders(leads).map((s) => ({ lead: s.lead, days: s.daysWaiting }));
+  const negotiations = stalledNegotiations(leads).map((n) => ({ lead: n.lead, days: n.daysInStage }));
+  const atRisk = new Map([...idle, ...delayed, ...negotiations].map((i) => [i.lead.id, i.lead.dealValue]));
   return {
-    stale: attentionList(staleLeads(leads).map((s) => ({ lead: s.lead, days: s.daysIdle })), rep),
-    stuck: attentionList(stuckOrders(leads).map((s) => ({ lead: s.lead, days: s.daysWaiting })), manager),
-    negotiations: attentionList(
-      stalledNegotiations(leads).map((n) => ({ lead: n.lead, days: n.daysInStage })),
-      rep,
-    ),
+    stale: attentionList(idle, rep),
+    stuck: attentionList(delayed, manager),
+    staleOrders: attentionList(staleOrderRecords(leads).map((s) => ({ lead: s.lead, days: s.daysWaiting })), rep),
+    negotiations: attentionList(negotiations, rep),
     delayReasons: delayReasons(leads).reasons.slice(0, ATTENTION_PREVIEW),
+    valueAtRisk: sumBy([...atRisk.values()], (v) => v),
   };
 }
 

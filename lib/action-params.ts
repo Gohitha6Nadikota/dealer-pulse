@@ -7,6 +7,7 @@ import { filtersToQuery, type Filters, type SearchParams } from "@/lib/filters";
 
 export const ACTION_REASONS = [
   "delayed_order",
+  "stale_order",
   "stalled_negotiation",
   "idle_lead",
   "past_close_date",
@@ -16,6 +17,7 @@ export type ActionReason = (typeof ACTION_REASONS)[number];
 
 export const REASON_LABELS: Record<ActionReason, string> = {
   delayed_order: "Delayed delivery",
+  stale_order: "Likely stale record",
   stalled_negotiation: "Stalled negotiation",
   idle_lead: "Idle lead",
   past_close_date: "Past expected close",
@@ -25,6 +27,7 @@ export const REASON_LABELS: Record<ActionReason, string> = {
 /** The next step for the owner, by primary reason. */
 export const REASON_ACTIONS: Record<ActionReason, string> = {
   delayed_order: "Chase delivery and update the customer",
+  stale_order: "Verify the order's status in the CRM",
   stalled_negotiation: "Push to a decision on price or terms",
   idle_lead: "Follow up with the customer",
   past_close_date: "Re-confirm timing and update the close date",

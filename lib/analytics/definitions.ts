@@ -61,8 +61,14 @@ export const REVENUE_FIELD = "deal_value" as const;
 export const THRESHOLDS = {
   /** Open lead with no history activity for this many days or more. */
   staleLeadDays: 7,
-  /** Order placed but not delivered for longer than this. */
+  /** Order placed but not delivered for longer than this: a delayed delivery. */
   stuckOrderDays: 21,
+  /**
+   * Order still undelivered this many days after it was placed: treated as a
+   * likely stale CRM record (cancelled, or delivered but not logged) rather than
+   * a delay. The slowest delivery in the data took 39 days, so 90 is conservative.
+   */
+  staleOrderDays: 90,
   /** Lead sitting in `negotiation` for this many days or more. */
   stalledNegotiationDays: 10,
 } as const;
