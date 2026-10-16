@@ -24,7 +24,7 @@ A performance dashboard for a five-branch Toyota dealership group. It answers tw
 Across all pages:
 
 - **Filters live in the URL** (`?range=3m|6m|all`, `?from=2025-08&to=2025-10`, `?branch=B3`, and on `/actions` also `?reason=`, `?severity=`, `?owner=`), so every view is shareable and drill-down keeps the date range.
-- **"Data as of 31 Dec 2025 UTC".** All "days idle" maths uses the data's latest timestamp, never the wall clock.
+- **Snapshot date from the data.** All "days idle" maths uses the data's latest timestamp (31 Dec 2025 UTC), never the wall clock; each snapshot section is labelled "as of 31 Dec 2025 (UTC)".
 - **Data notes popover** in the header lists the data caveats.
 - **Indian currency formatting** (₹8.4 Cr, ₹20.9 L) and UTC dates throughout.
 - **Tooltips** define every metric.

@@ -1,18 +1,14 @@
-import { CalendarClockIcon } from "lucide-react";
 import { Brand } from "@/components/app-shell/brand";
 import { DataNotes } from "@/components/app-shell/data-notes";
 import { MobileNav } from "@/components/app-shell/mobile-nav";
 import { NavLinks } from "@/components/app-shell/nav-links";
 import type { DataNote } from "@/lib/analytics/data-notes";
-import { formatDate } from "@/lib/format";
 
-/** Sidebar on desktop, drawer below lg; top bar with the data-as-of badge. */
+/** Sidebar on desktop, drawer below lg; top bar with Data notes. */
 export function AppShell({
-  asOf,
   notes,
   children,
 }: {
-  asOf: string;
   notes: DataNote[];
   children: React.ReactNode;
 }) {
@@ -30,10 +26,6 @@ export function AppShell({
           </div>
           <div className="ml-auto flex items-center gap-1">
             <DataNotes notes={notes} />
-            <span className="inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-xs font-medium">
-              <CalendarClockIcon className="size-3.5 text-muted-foreground" aria-hidden />
-              Data as of {formatDate(asOf)} <span className="text-muted-foreground">UTC</span>
-            </span>
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-8">{children}</main>

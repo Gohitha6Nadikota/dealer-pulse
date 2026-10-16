@@ -25,7 +25,10 @@ import { hrefWithFilters, parseRangeFilters } from "@/lib/filters";
 import { formatDate, formatNumber, formatRange } from "@/lib/format";
 import { METRIC_HELP } from "@/lib/metric-help";
 
-/** Every branch is prerendered; unknown ids 404 before streaming starts. */
+/**
+ * Every branch is prerendered. Unknown ids get a real 404 from proxy.ts before
+ * rendering; the notFound() inside the content is a second line of defence.
+ */
 export function generateStaticParams() {
   return getDataset().branches.map((b) => ({ id: b.id }));
 }
@@ -35,22 +38,20 @@ export async function generateMetadata({ params }: PageProps<"/branches/[id]">):
   return { title: getBranch(id)?.name ?? "Branch not found" };
 }
 
-export default async function BranchPage({ params, searchParams }: PageProps<"/branches/[id]">) {
-  const { id } = await params;
-  if (!getBranch(id)) notFound();
+// The shell is shared by every branch URL, so params are read inside Suspense:
+// a client navigation can show the skeleton at once instead of waiting on the server.
+export default function BranchPage({ params, searchParams }: PageProps<"/branches/[id]">) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <Suspense fallback={<PageSkeleton label="Loading branch" />}>
-        <BranchContent id={id} searchParams={searchParams} />
+        <BranchContent params={params} searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function BranchContent({
-  id,
-  searchParams,
-}: { id: string } & Pick<PageProps<"/branches/[id]">, "searchParams">) {
+async function BranchContent({ params, searchParams }: PageProps<"/branches/[id]">) {
+  const { id } = await params;
   const ds = getDataset();
   const filters = parseRangeFilters(await searchParams, {
     months: ds.months,

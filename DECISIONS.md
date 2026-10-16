@@ -47,7 +47,7 @@ Supporting pages:
 
 ### "Today" is AS_OF, not the clock
 
-`AS_OF` is the latest timestamp in the data: **31 Dec 2025, 19:10 UTC**. All "days idle", "days in stage" and "days waiting" use it, so the numbers don't drift as real time passes. The header shows "Data as of 31 Dec 2025 UTC".
+`AS_OF` is the latest timestamp in the data: **31 Dec 2025, 19:10 UTC**. All "days idle", "days in stage" and "days waiting" use it, so the numbers don't drift as real time passes. There is no global header badge; every snapshot section labels its date instead ("Right now · as of 31 Dec 2025 (UTC)", the Needs attention card, the Action Center and the outlook), and Data notes explains the UTC choice.
 
 ---
 
@@ -267,7 +267,7 @@ The win-rate rules need at least 5 outcomes. Comparison rules are skipped when t
 
 ### UTC handling
 
-Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in UTC (`lib/format.ts`, not `date-fns`, whose `format` uses the local zone). AS_OF is 31 Dec 2025 19:10 UTC, which is already 1 Jan in India; showing it in local time would put the badge in the wrong year. Every "as of" label says UTC, timeline entries show the time with "UTC", and the Data notes popover explains this. Currency is formatted the Indian way: ₹8.4 Cr, ₹20.9 L, ₹2,29,70,000.
+Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in UTC (`lib/format.ts`, not `date-fns`, whose `format` uses the local zone). AS_OF is 31 Dec 2025 19:10 UTC, which is already 1 Jan in India; showing it in local time would put the "as of" date in the wrong year. Every "as of" label says UTC, timeline entries show the time with "UTC", and the Data notes popover explains this. Currency is formatted the Indian way: ₹8.4 Cr, ₹20.9 L, ₹2,29,70,000.
 
 ---
 

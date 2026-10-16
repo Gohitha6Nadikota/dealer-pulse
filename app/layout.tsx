@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         <TooltipProvider delayDuration={150}>
-          <AppShell asOf={dataset.asOf} notes={dataNotes(dataset)}>
+          <AppShell notes={dataNotes(dataset)}>
             {children}
           </AppShell>
         </TooltipProvider>

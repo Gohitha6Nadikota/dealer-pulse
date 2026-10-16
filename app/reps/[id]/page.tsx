@@ -40,19 +40,20 @@ export async function generateMetadata({ params }: PageProps<"/reps/[id]">): Pro
   return { title: getSalesOfficer(id)?.name ?? "Sales officer not found" };
 }
 
-export default async function RepPage({ params, searchParams }: PageProps<"/reps/[id]">) {
-  const { id } = await params;
-  if (!getSalesOfficer(id)) notFound();
+// Params are read inside Suspense so the shared shell (and its skeleton) shows at
+// once on client navigation. Unknown ids and managers 404 in proxy.ts first.
+export default function RepPage({ params, searchParams }: PageProps<"/reps/[id]">) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <Suspense fallback={<PageSkeleton label="Loading sales officer" />}>
-        <RepContent id={id} searchParams={searchParams} />
+        <RepContent params={params} searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function RepContent({ id, searchParams }: { id: string } & Pick<PageProps<"/reps/[id]">, "searchParams">) {
+async function RepContent({ params, searchParams }: PageProps<"/reps/[id]">) {
+  const { id } = await params;
   const ds = getDataset();
   const filters = parseRangeFilters(await searchParams, {
     months: ds.months,
