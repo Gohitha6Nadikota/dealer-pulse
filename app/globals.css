@@ -90,6 +90,14 @@
   --sidebar-accent-foreground: #184f95;
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Categorical series (validated reference palette), assigned by stable entity order. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-other: #898781;
   /* Status colors: reserved for health/state, always paired with icon + label. */
   --good: #0ca30c;
   --good-foreground: #006300;

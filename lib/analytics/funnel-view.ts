@@ -13,6 +13,7 @@ import {
   type RankedLeak,
 } from "@/lib/analytics/leaks";
 import { salesOfficers } from "@/lib/analytics/scope";
+import { buildSegments, type Segments } from "@/lib/analytics/segments";
 import { isStatusConflict, statusConflictSummary, type StatusConflictSummary } from "@/lib/analytics/status-conflicts";
 import { hrefWithFilters, type Filters } from "@/lib/filters";
 import type { LeadRow } from "@/lib/lead-table";
@@ -35,6 +36,8 @@ export type FunnelView = {
   statusConflicts: StatusConflictSummary & { leads: LeadRow[] };
   /** Snapshot of today's open pipeline; not range-filtered. */
   forecast: Forecast;
+  /** Lead sources and car models for leads created in the range, in scope. */
+  segments: Segments;
 };
 
 export function buildFunnelView(ds: Dataset, filters: Filters): FunnelView {
@@ -76,5 +79,6 @@ export function buildFunnelView(ds: Dataset, filters: Filters): FunnelView {
       leads: scopeLeads.filter(isStatusConflict).map(toLeadRow),
     },
     forecast: buildForecast(ds.leads, scopeLeads),
+    segments: buildSegments(ds, range, branch?.id ?? null),
   };
 }

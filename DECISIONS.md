@@ -263,7 +263,7 @@ The win-rate rules need at least 5 outcomes. Comparison rules are skipped when t
 - **Client components** are limited to the filter bars, the chart, the lead and action tables (search, sort, timeline drawer) and navigation. They receive trimmed rows (no phone numbers, notes already sanitised).
 - **Real 404s:** detail pages are prerendered via `generateStaticParams`, but with streaming a `notFound()` inside the page would return HTTP 200. `proxy.ts` checks branch and officer IDs against the dataset before rendering and rewrites unknown ones to the not-found page, giving a true 404.
 - **UI:** Tailwind v4 and shadcn/ui (Radix), Recharts for the trend chart, one accent colour (blue), and status colours (green, amber, red) reserved for health and severity, always with an icon and a label.
-- **Tests:** Vitest, 232 tests across 24 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
+- **Tests:** Vitest, 254 tests across 26 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
 
 ### UTC handling
 
@@ -278,6 +278,8 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 3. **Demand grew in Q4.** Leads created rose from 55–70 a month (Jun–Sep) to 90–95 (Oct–Nov); bookings Oct–Dec were 59% above Jul–Sep (118 vs 74).
 4. **Losses are spread across reasons**, with no single dominant cause ("Better offer elsewhere" and "Not ready to purchase" lead at 40 each, 15%). Competitor-related reasons account for about a quarter of losses.
 5. **Late stages convert well.** Once in negotiation, 87% of resolved leads ordered; the leak is early in the funnel.
+6. **Lead sources** (`/funnel`, leads created in the selected range, win rate = won ÷ (won + genuinely lost)): walk-in converts best (62%, 83 won vs 50 lost) and social media worst (19%), a 44-point spread, so the "source doesn't predict conversion" line stays off.
+7. **Car models** (`/funnel`, same cohort and win rate, sorted by booked revenue): Fortuner earns the most (₹15 Cr, 32% of booked revenue) and Glanza has the most leads (130); Hilux (11 leads) is flagged as fewer than 20.
 
 ---
 
@@ -287,6 +289,7 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 - **Forecast:** eventual orders, not dated; no what-if slider (listed as a stretch goal).
 - **Loss-reason breakdown** is a table by stage, not a chart. The stage split was more useful than a bar chart of the same counts.
 - **Funnel visual** is accessible HTML bars, not Recharts.
+- **The `source` field is unreliable.** It matches the channel named in the lead's first history note ("Walk-in enquiry…", "DM on Instagram…") for only 82 of 510 leads (16%), about what chance alone gives (17%). The data can't tell which field is right, so source win rates are shown with that caveat on the card and shouldn't drive spend decisions on their own.
 - **Censoring:** recent months are biased in delivery time (low), funnel conversion and loss rates; disclosed where shown.
 - **Synthetic data:** patterns (e.g. "Customer requested date change" as the top delay reason) may not generalise.
 - **Severity tiers** (2× threshold) are a convention, not a business rule from the brief.

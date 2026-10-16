@@ -11,6 +11,7 @@ import { LeakMatrix } from "@/components/funnel/leak-matrix";
 import { LossReasonsTable } from "@/components/funnel/loss-reasons-table";
 import { ReconciliationTable } from "@/components/funnel/reconciliation-table";
 import { StatusConflicts } from "@/components/funnel/status-conflicts";
+import { CarModelsCard, LeadSourcesCard, SegmentCardSkeleton } from "@/components/segments/segment-cards";
 import { buildFunnelView } from "@/lib/analytics/funnel-view";
 import { LEAK_Z, MIN_LEAK_SAMPLE, leakSentence } from "@/lib/analytics/leaks";
 import { getDataset } from "@/lib/data";
@@ -24,7 +25,17 @@ const LEAK_HELP = `Loss rate = leads lost at a stage ÷ leads that reached it, f
 export default function FunnelPage({ searchParams }: PageProps<"/funnel">) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <Suspense fallback={<PageSkeleton label="Loading funnel" />}>
+      <Suspense
+        fallback={
+          <div className="flex flex-col gap-6">
+            <PageSkeleton label="Loading funnel" />
+            <div className="grid gap-4 2xl:grid-cols-2">
+              <SegmentCardSkeleton variant="donut" />
+              <SegmentCardSkeleton variant="table" />
+            </div>
+          </div>
+        }
+      >
         <FunnelContent searchParams={searchParams} />
       </Suspense>
     </div>
@@ -36,6 +47,7 @@ async function FunnelContent({ searchParams }: Pick<PageProps<"/funnel">, "searc
   const filters = parseFilters(await searchParams, { months: ds.months, branchIds: ds.branches.map((b) => b.id) });
   const view = buildFunnelView(ds, filters);
   const rowLabel = view.branch ? "Sales officer" : "Branch";
+  const scope = { name: view.scopeName, period: formatRange(filters.range) };
 
   return (
     <FilterTransition>
@@ -100,6 +112,11 @@ async function FunnelContent({ searchParams }: Pick<PageProps<"/funnel">, "searc
             <EmptyState title="No losses in this period" className="mx-4" />
           )}
         </SectionCard>
+
+        <div className="grid gap-4 2xl:grid-cols-2">
+          <LeadSourcesCard segments={view.segments} scope={scope} />
+          <CarModelsCard segments={view.segments} scope={scope} />
+        </div>
 
         <SectionCard
           title="Recorded lost, but no loss event"

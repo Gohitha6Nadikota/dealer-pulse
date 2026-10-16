@@ -18,7 +18,7 @@ A performance dashboard for a five-branch Toyota dealership group. It answers tw
 | **Overview** `/` | Rule-based headline ("Bookings are up 59% on Jul – Sep 2025 …; Lakeside Toyota needs attention …"), KPIs with period-over-period change, monthly bookings vs target, funnel, needs-attention summary, branch comparison with a health badge |
 | **Branches** `/branches`, `/branches/[id]` | Branch KPIs, trend vs branch target, funnel vs company, sales officers, action items, open leads and orders |
 | **Sales officer** `/reps/[id]` | Rank in branch, KPIs, trend, funnel vs branch, pipeline by stage, every assigned lead (search, sort, status tabs) with a timeline drawer |
-| **Funnel & outlook** `/funnel` | Funnel reconciliation, leak detection by branch or officer (with sample-size and significance rules), loss reasons by stage, the status-conflict investigation, a qualified pipeline outlook |
+| **Funnel & outlook** `/funnel` | Funnel reconciliation, leak detection by branch or officer (with sample-size and significance rules), loss reasons by stage, lead sources (donut) and car models, the status-conflict investigation, a qualified pipeline outlook |
 | **Action Center** `/actions` | One row per lead needing action: severity, every reason, owner, next step, age, value; filters by branch, person, severity and reason |
 
 Across all pages:
@@ -95,7 +95,7 @@ Then open http://localhost:3000.
 | `npm start` | Serve the production build |
 | `npm run audit` | Data audit: shape, AS_OF, targets vs actuals, status/history conflicts, note contradictions, template bugs, delivery censoring, integrity |
 | `npm run typecheck` | `tsc --noEmit` (strict) |
-| `npm test` | Vitest, once (232 tests) |
+| `npm test` | Vitest, once (254 tests) |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run lint` | ESLint (Next core-web-vitals and TypeScript rules) |
 
@@ -125,7 +125,7 @@ The data is synthetic: 5 branches, 30 people (5 managers who own no leads, 25 sa
 npm test
 ```
 
-232 tests across 24 files cover:
+254 tests across 26 files cover:
 
 - validation and enrichment
 - every metric, the filters and URL round-trips, and formatting
