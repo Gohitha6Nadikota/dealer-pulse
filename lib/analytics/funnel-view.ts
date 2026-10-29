@@ -13,6 +13,7 @@ import {
   type RankedLeak,
 } from "@/lib/analytics/leaks";
 import { salesOfficers } from "@/lib/analytics/scope";
+import { buildScenarioInputs, type ScenarioInputs } from "@/lib/analytics/scenario";
 import { buildSegments, type Segments } from "@/lib/analytics/segments";
 import { isStatusConflict, statusConflictSummary, type StatusConflictSummary } from "@/lib/analytics/status-conflicts";
 import { hrefWithFilters, type Filters } from "@/lib/filters";
@@ -38,6 +39,8 @@ export type FunnelView = {
   forecast: Forecast;
   /** Lead sources and car models for leads created in the range, in scope. */
   segments: Segments;
+  /** What-if inputs; null when there is no resolved history to base them on. */
+  scenario: ScenarioInputs | null;
 };
 
 export function buildFunnelView(ds: Dataset, filters: Filters): FunnelView {
@@ -64,6 +67,8 @@ export function buildFunnelView(ds: Dataset, filters: Filters): FunnelView {
 
   const conflictSummary = statusConflictSummary(scopeLeads, branch ? [branch] : ds.branches);
 
+  const forecast = buildForecast(ds.leads, scopeLeads);
+
   return {
     asOf: ds.asOf,
     filters,
@@ -78,7 +83,16 @@ export function buildFunnelView(ds: Dataset, filters: Filters): FunnelView {
       ...conflictSummary,
       leads: scopeLeads.filter(isStatusConflict).map(toLeadRow),
     },
-    forecast: buildForecast(ds.leads, scopeLeads),
+    forecast,
     segments: buildSegments(ds, range, branch?.id ?? null),
+    scenario: forecast.window
+      ? buildScenarioInputs(
+          ds,
+          scopeLeads,
+          forecast,
+          branch,
+          ds.branches.map((b) => ({ branch: b, forecast: buildForecast(ds.leads, ds.leadsByBranch[b.id]) })),
+        )
+      : null,
   };
 }

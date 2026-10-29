@@ -164,6 +164,17 @@ The date filter (`?range=3m|6m|all` or `?from=YYYY-MM&to=YYYY-MM`) changes **per
 
 ---
 
+### What-if scenarios (`lib/analytics/scenario.ts`, on `/funnel`)
+
+Sliders change each step's conversion (New → Contacted, Contacted → Test drive, Test drive → Negotiation, Negotiation → Order) by a relative amount, from −50% to +100%, capped at a 100% rate. A fifth slider changes monthly lead volume by ±50%. The panel shows the effect on the lead-to-order rate, orders and value from today's open pipeline (with the same ~90% range), and the monthly run-rate from new leads.
+
+- **Why it works:** no lead in the data skips a stage, so the chance of ordering from a stage is the product of the step rates after it. Today's company step rates are 78%, 79%, 81% and 87%, and they multiply to 43% (188 of 435). A slider scales one step, which scales p for every stage before it. With every slider at 0% the panel equals the Pipeline outlook exactly; a test checks this for the company and every branch, with and without the status conflicts.
+- **Inputs:** step rates from the outlook's own probabilities (Jun–Nov resolved leads, a branch's own rate where it has 20+ past leads at the stage); lead volume = the average of the last three months (about 87 a month company-wide); revenue = the average booked deal (about ₹24 L).
+- **Example:** +10% on Test drive → Negotiation (81% → 89%) lifts the lead-to-order rate from 43.2% to 47.5%, today's pipeline from about 23.3 to 25.2 orders, and the run-rate by about 3.7 orders (≈ ₹0.9 Cr) a month.
+- **Presets:** "Match company rates" on a branch (Lakeside goes from 15.6% to the company's 43.2%), and "Match best branch". The latter combines different branches' best steps, so it is an optimistic upper bound.
+- **Runs in the browser:** the server computes the inputs once; the panel recalculates on every slider move with the same pure functions the tests cover. It is the only client-side calculation in the app, chosen so the sliders respond instantly.
+- **Limits:** it assumes everything else stays the same; in practice, pushing more leads through one step can lower their quality at the next. It is an illustration, not a prediction. Scenarios aren't saved in the URL yet.
+
 ## 7. Funnel reconciliation and leak detection
 
 ### Reconciliation (`reconcileFunnel`)
@@ -263,7 +274,7 @@ The win-rate rules need at least 5 outcomes. Comparison rules are skipped when t
 - **Client components** are limited to the filter bars, the chart, the lead and action tables (search, sort, timeline drawer) and navigation. They receive trimmed rows (no phone numbers, notes already sanitised).
 - **Real 404s:** detail pages are prerendered via `generateStaticParams`, but with streaming a `notFound()` inside the page would return HTTP 200. `proxy.ts` checks branch and officer IDs against the dataset before rendering and rewrites unknown ones to the not-found page, giving a true 404.
 - **UI:** Tailwind v4 and shadcn/ui (Radix), Recharts for the trend chart, one accent colour (blue), and status colours (green, amber, red) reserved for health and severity, always with an icon and a label.
-- **Tests:** Vitest, 254 tests across 26 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast maths, the status-conflict warning (including server-rendered markup) and real-data pins.
+- **Tests:** Vitest, 280 tests across 28 files covering validation, enrichment, every metric, filters and URLs, formatting, health, insights, view models, action prioritisation, funnel reconciliation, leak rules, the forecast and what-if maths, the status-conflict warning (including server-rendered markup) and real-data pins.
 
 ### UTC handling
 
@@ -286,7 +297,7 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 ## 13. Known limitations and deviations from the brief
 
 - **`stuckOrders` and delay reasons:** the brief wanted each stuck order to show its `delay_reason`. The data only has delay reasons for delivered orders, so stuck orders have none. A separate "Why deliveries ran late" summary uses the delivered history instead.
-- **Forecast:** eventual orders, not dated; no what-if slider (listed as a stretch goal).
+- **Forecast:** eventual orders, not dated. What-if scenarios exist (see §6) but aren't saved in the URL.
 - **Loss-reason breakdown** is a table by stage, not a chart. The stage split was more useful than a bar chart of the same counts.
 - **Funnel visual** is accessible HTML bars, not Recharts.
 - **The `source` field is unreliable.** It matches the channel named in the lead's first history note ("Walk-in enquiry…", "DM on Instagram…") for only 82 of 510 leads (16%), about what chance alone gives (17%). The data can't tell which field is right, so source win rates are shown with that caveat on the card and shouldn't drive spend decisions on their own.
@@ -305,7 +316,7 @@ Timestamps are stored in UTC. Months are bucketed in UTC and dates formatted in 
 1. **Write-back for status conflicts:** let a manager confirm or correct a lead's status from the Action Center (needs a CRM integration).
 2. **Alerts:** a daily WhatsApp or email digest of each person's "Act now" items.
 3. **Anomaly detection:** flag sudden drops in a branch's weekly bookings or jumps in delivery time automatically.
-4. **What-if and dated forecast:** stage-conversion sliders and a time-to-order model for "expected bookings by month".
+4. **Dated forecast and shareable scenarios:** a time-to-order model for "expected bookings by month", and what-if settings saved in the URL.
 5. **LLM summaries:** a natural-language weekly brief generated from the same rule-based facts, with the numbers still computed deterministically.
 6. **Export and share:** PDF or CSV of any filtered view.
 7. **Real-time sync** with the CRM instead of a static JSON snapshot.

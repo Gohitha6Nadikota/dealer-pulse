@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/dashboard/section-card";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FilterTransition, PendingRegion } from "@/components/filters/filter-transition";
 import { ForecastSection } from "@/components/funnel/forecast-card";
+import { WhatIfPanel } from "@/components/funnel/what-if-panel";
 import { LeakMatrix } from "@/components/funnel/leak-matrix";
 import { LossReasonsTable } from "@/components/funnel/loss-reasons-table";
 import { ReconciliationTable } from "@/components/funnel/reconciliation-table";
@@ -132,6 +133,38 @@ async function FunnelContent({ searchParams }: Pick<PageProps<"/funnel">, "searc
           contentClassName="px-0"
         >
           <ForecastSection forecast={view.forecast} scopeName={view.scopeName} />
+        </SectionCard>
+
+        <SectionCard
+          title="What-if: improve the funnel"
+          description={`${view.scopeName}. Move a step's conversion or the lead volume and see the effect. An illustration of today's patterns, not a prediction.`}
+          help="Each slider changes one step's conversion rate relative to today (e.g. +10% turns 81% into 89%, capped at 100%). The chance of ordering from a stage is the product of the step rates after it, because no lead in the data skips a stage. With every slider at 0% the figures equal the Pipeline outlook."
+        >
+          {view.scenario ? (
+            <div className="flex flex-col gap-5">
+              <WhatIfPanel inputs={view.scenario} />
+              <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                <li>
+                  Step rates come from leads created {view.forecast.window && formatRange(view.forecast.window)}, the months where every
+                  lead has an outcome, using {view.scopeName === "All branches" ? "company" : `${view.scopeName}'s own`} history where it
+                  has enough leads.
+                </li>
+                <li>
+                  Lead volume is the average of {formatRange(view.scenario.volumeWindow)}; revenue uses the average booked deal value.
+                </li>
+                <li>
+                  Assumes everything else stays the same. In practice, pushing more leads through one step can lower their quality at
+                  the next.
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <EmptyState
+              title="Not enough history for what-if scenarios"
+              description="No creation month has every lead resolved yet, so step rates would be biased."
+              className="py-8"
+            />
+          )}
         </SectionCard>
       </PendingRegion>
     </FilterTransition>

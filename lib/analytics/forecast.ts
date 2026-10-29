@@ -99,6 +99,55 @@ export type PipelineForecast = {
   valueRange: [number, number];
 };
 
+/** An open lead reduced to what the outlook needs. */
+export type PipelineItem = { stage: OpenStage; /** INR. */ value: number };
+
+export type PipelineTotals = {
+  openLeads: number;
+  pipelineValue: number;
+  expectedOrders: number;
+  expectedValue: number;
+  /** ~90% range for orders and value, from outcome variation only. */
+  ordersRange: [number, number];
+  valueRange: [number, number];
+};
+
+/**
+ * Expected orders and value, with ~90% ranges, for open items given a chance
+ * of ordering per stage (null counts as 0). Shared by the outlook and the
+ * what-if panel so they can never disagree.
+ */
+export function pipelineTotals(items: PipelineItem[], p: Partial<Record<OpenStage, number | null>>): PipelineTotals {
+  let expectedOrders = 0;
+  let expectedValue = 0;
+  let pipelineValue = 0;
+  let varOrders = 0;
+  let varValue = 0;
+  for (const item of items) {
+    const prob = p[item.stage] ?? 0;
+    expectedOrders += prob;
+    expectedValue += prob * item.value;
+    pipelineValue += item.value;
+    varOrders += prob * (1 - prob);
+    varValue += item.value ** 2 * prob * (1 - prob);
+  }
+  const clamp = (x: number, max: number) => Math.min(max, Math.max(0, x));
+  return {
+    openLeads: items.length,
+    pipelineValue,
+    expectedOrders,
+    expectedValue,
+    ordersRange: [
+      clamp(Math.floor(expectedOrders - Z90 * Math.sqrt(varOrders)), items.length),
+      clamp(Math.ceil(expectedOrders + Z90 * Math.sqrt(varOrders)), items.length),
+    ],
+    valueRange: [
+      clamp(expectedValue - Z90 * Math.sqrt(varValue), pipelineValue),
+      clamp(expectedValue + Z90 * Math.sqrt(varValue), pipelineValue),
+    ],
+  };
+}
+
 /** Expected orders and value from open leads, given stage probabilities. */
 export function forecastPipeline(open: Lead[], probabilities: StageProbability[]): PipelineForecast {
   const p = new Map(probabilities.map((s) => [s.stage, s]));
@@ -115,32 +164,11 @@ export function forecastPipeline(open: Lead[], probabilities: StageProbability[]
       medianDaysToOrder: p.get(stage)?.medianDaysToOrder ?? null,
     };
   });
-  let varOrders = 0;
-  let varValue = 0;
-  for (const lead of open) {
-    const prob = p.get(lead.status as OpenStage)?.p ?? 0;
-    varOrders += prob * (1 - prob);
-    varValue += lead.dealValue ** 2 * prob * (1 - prob);
-  }
-  const expectedOrders = sumBy(stages, (s) => s.expectedOrders);
-  const expectedValue = sumBy(stages, (s) => s.expectedValue);
-  const pipelineValue = sumBy(stages, (s) => s.pipelineValue);
-  const clamp = (x: number, max: number) => Math.min(max, Math.max(0, x));
-  return {
-    stages,
-    openLeads: open.length,
-    pipelineValue,
-    expectedOrders,
-    expectedValue,
-    ordersRange: [
-      clamp(Math.floor(expectedOrders - Z90 * Math.sqrt(varOrders)), open.length),
-      clamp(Math.ceil(expectedOrders + Z90 * Math.sqrt(varOrders)), open.length),
-    ],
-    valueRange: [
-      clamp(expectedValue - Z90 * Math.sqrt(varValue), pipelineValue),
-      clamp(expectedValue + Z90 * Math.sqrt(varValue), pipelineValue),
-    ],
-  };
+  const totals = pipelineTotals(
+    open.map((l) => ({ stage: l.status as OpenStage, value: l.dealValue })),
+    Object.fromEntries(probabilities.map((s) => [s.stage, s.p])),
+  );
+  return { stages, ...totals };
 }
 
 export type Forecast = {
